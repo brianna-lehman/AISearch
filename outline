@@ -1,0 +1,49 @@
+- get first cmdln argument and put it in a file (problem)
+- open problem file and read first line
+
+if first line is "monitor"
+	iterate through line 2 list
+		creating a new sensor object (id, x_coor, y_coor, power)
+		putting the sensor in a list (id, x_coor, y_coor)
+	iterate through line 3 list
+		creating new target object
+		putting target in a list
+	# how are sensors and targets connected?
+	# do a search of each sensor to find the nearest target?
+	# goal state: all targets are monitored
+
+if first line is "aggregation"
+	iterate through line 2 list
+		creating new node object (id, x_coor, y_coor)
+		putting node in list
+	iterate through until eof
+		creating new edge object (node1, node2, weight)
+		creating new edge object (node2, node1, weight)
+		putting edge in list
+	# start at any node and search until all the nodes have been visited?
+	# find the lowest weight path?
+	# goal state: all nodes are visited
+
+class MonitorProblem():
+	name = monitor
+	sensors = [Sensor s1, Sensor s2, Sensor s3, etc]
+	targets = [Target t1, Target t2, Target t3, etc]
+	goal = False
+
+- get second cmdln argument and put it in a string (search_algo)
+
+def search(search_algo=None):
+	if search_algo is "bfs":
+		bfs() {
+
+		}
+	elif search_algo is "unicost":
+		unicost()
+	elif search_algo is "iddfs":
+		iddfs()
+	elif search_algo is "greedy":
+		greedy()
+	elif search_algo is "Astar":
+		astar()
+	else:
+		#throw error
