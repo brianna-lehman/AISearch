@@ -12,10 +12,10 @@ def main():
 
 def monitor(file, search_algo):
 	# read in the list of sensors
-	# make an array of Sensor objects
+	# make a dictionary of Sensor objects [Sensor_name: Sensor object]
 
 	# read in the list of targets
-	# make an array of Target objects
+	# make a dictionary of Target objects
 
 	# for every Sensor in the array
 		# do a search to find the nearest target?
@@ -24,7 +24,19 @@ def monitor(file, search_algo):
 			# or the target that the sensor is monitoring
 
 def aggregation(file, search_algo):
-	pass
+	# read in list of nodes
+	# make a dictionary of Node objects [Node_name: Node object]
+
+	# for every line until EOF
+		# get first node name
+		# get the corresponding Node object based on name
+		# get second node name
+		# get corresponding Node object based on name
+		# get weight
+		# firstNode.addAdjacentNode((secondNode, weight))
+		# secondNode.addAdjacentNode((firstNode, weight))
+
+	# what is the start state?
 
 def search(algo):
 	if algo is "bfs":
@@ -41,10 +53,14 @@ def search(algo):
 		return None
 
 class Node:
-	def __init__(self, name, start, stop):
+	def __init__(self, name, start, stop, adj_nodes=[]):
 		self.name = name
 		self.start = start
 		self.stop = stop
+		self.adj_nodes = adj_nodes
+
+	def addAdjacentNode(edge):
+		self.adj_nodes.append(edge)
 
 class Sensor(Node):
 	def __init__(self, name, start, stop, power):
