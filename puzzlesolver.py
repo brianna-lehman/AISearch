@@ -52,6 +52,24 @@ def search(algo):
 	else:
 		return None
 
+def bfs(problem, solution):
+	initial_state = problem.initial_state
+	path_cost = 0
+
+	# if problem.goal_test(curr_state)
+		# return Solution()
+
+	frontier = Queue.Queue(0)
+	frontier.put(initial_state)
+	explored = []
+
+	while True:
+		if frontier.empty():
+			solution.path = None
+			return solution
+		curr_state = frontier.get()
+		explored.append(curr_state)
+
 class Node:
 	def __init__(self, name, start, stop, adj_nodes=[]):
 		self.name = name
@@ -72,13 +90,30 @@ class Target(Node):
 		Node.__init__(self, name, start, stop)
 		self.monitored = monitored
 
-class Problem:
+class MonitorProblem:
 	initial_state
 	actions = []
 
 	def goal_test(state):
 		# test if the goal has been reached
+		# return t/f
 		# how do you you do that?
+		pass
+
+	def get_next_state():
+		pass
+
+class AggregationProblem:
+	initial_state = # a set of unvisited nodes
+
+class Solution:
+	def __init__(self):
+		self.path = [] # array of states that lead to the solved solution (or None)
+		self.time = 0 # total number of nodes created
+		self.frontier_space = 0 # largest number of nodes in frontier
+		self.explored_space = 0 # largest number of nodes in explored
+		self.cost = 0 	# for monitor cost = P(sub t)
+						# for agg cost = sum of weights in the path to visit all nodes
 
 if __name__ == "__main__":
 	main()
