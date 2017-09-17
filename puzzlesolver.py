@@ -1,4 +1,5 @@
 import sys
+from math import sqrt
 
 def main():
 	problem_filename = sys.argv[1]
@@ -56,7 +57,7 @@ def bfs(problem, solution):
 	initial_state = problem.initial_state
 	path_cost = 0
 
-	if problem.goal_test(curr_state)
+	if problem.goal_test(initial_state)
 		return Solution()
 
 	frontier = Queue.Queue(0)
@@ -84,24 +85,49 @@ def bfs(problem, solution):
 					solution.frontier_space = frontier.length
 
 class Node:
-	def __init__(self, name, start, stop, adj_nodes=[]):
+	'''
+	name = String
+	start = int
+	stop = int
+	adj_nodes = list
+	visited = boolean
+	'''
+	def __init__(self, name, start, stop, adj_nodes=[], visited=False):
 		self.name = name
 		self.start = start
 		self.stop = stop
 		self.adj_nodes = adj_nodes
+		self.visited = visited
 
-	def addAdjacentNode(edge):
-		self.adj_nodes.append(edge)
+	def addAdjacentNode(node):
+		# add a new node to the list of nodes connected to this object
+		self.adj_nodes.append(node)
 
 class Sensor(Node):
+	'''
+	power = int
+	'''
 	def __init__(self, name, start, stop, power):
 		Node.__init__(self, name, start, stop)
 		self.power = power
 
+	'''
+	t_start = int
+	t_stop = int
+	'''
+	def set_power(t_start, t_stop):
+		euclidean_distance = Math.sqrt((self.start - t_start)^2 + (self.stop - t_stop)^2)
+		self.power = self.power - euclidean_distance
+
+		if self.power < 0:
+			return False
+		else:
+			return True
+
+
 class Target(Node):
 	def __init__(self, name, start, stop, monitored=False):
 		Node.__init__(self, name, start, stop)
-		self.monitored = monitored
 
 class MonitorProblem:
 	initial_state
@@ -120,21 +146,28 @@ class MonitorProblem:
 		pass
 
 class AggregationProblem:
-	initial_state = # a set of unvisited nodes
+	'''
+	nodes = list of Node objects
+	initial_state = Node object
+	'''
+	def __init__(self, nodes, initial_state):
+		self.nodes = nodes # a list of all the nodes
+		self.initial_state = initial_state # starting node for traversing the graph
 
 	def goal_test(state):
-		pass
-		# return True if all nodes are visited
-		# return False otherwise
+		for n in self.nodes:
+			if n.visited = False:
+				return False
+		return True
 
 	def get_next_state(state, i):
-		pass
-		# given the state and index where the next child node lives
+		# given the current node and index where the next child node lives
 		# return the next child node
+		return state.adj_nodes[i]
 
 	def get_number_of_children(state):
-		pass
 		# given the current state, return the number of nodes attached to it
+		return len(state.adj_nodes)
 
 class Solution:
 	def __init__(self):
