@@ -56,11 +56,12 @@ def bfs(problem, solution):
 	initial_state = problem.initial_state
 	path_cost = 0
 
-	# if problem.goal_test(curr_state)
-		# return Solution()
+	if problem.goal_test(curr_state)
+		return Solution()
 
 	frontier = Queue.Queue(0)
 	frontier.put(initial_state)
+	solution.frontier_space += 1
 	explored = []
 
 	while True:
@@ -69,6 +70,18 @@ def bfs(problem, solution):
 			return solution
 		curr_state = frontier.get()
 		explored.append(curr_state)
+		solution.explored_space += 1
+
+		number_of_children = problem.get_number_of_children(curr_state)
+
+		for i in range(0, number_of_children):
+			child = problem.get_next_state(curr_state, i)
+			if child not in explored and child not in frontier:
+				if problem.goal_test(child) == True:
+					return solution
+				frontier.put(child);
+				if frontier.length > solution.frontier_space:
+					solution.frontier_space = frontier.length
 
 class Node:
 	def __init__(self, name, start, stop, adj_nodes=[]):
@@ -103,8 +116,25 @@ class MonitorProblem:
 	def get_next_state():
 		pass
 
+	def get_number_of_children():
+		pass
+
 class AggregationProblem:
 	initial_state = # a set of unvisited nodes
+
+	def goal_test(state):
+		pass
+		# return True if all nodes are visited
+		# return False otherwise
+
+	def get_next_state(state, i):
+		pass
+		# given the state and index where the next child node lives
+		# return the next child node
+
+	def get_number_of_children(state):
+		pass
+		# given the current state, return the number of nodes attached to it
 
 class Solution:
 	def __init__(self):
