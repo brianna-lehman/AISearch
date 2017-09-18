@@ -11,23 +11,24 @@ def main():
 	elif problem is "aggregation":
 		aggregation(file, search_algo);
 
-def monitor(file, search_algo):
-	# read in the list of sensors
-	# make a dictionary of Sensor objects [Sensor_name: Sensor object]
+def aggregation(file, algo):
+	'''read in the second line of the file
+	for every element in the returned list
+		create an AggState(name, start, stop)
+		put the new state object in a list
+	for every line until EOF
+		create a list out of the line [nameA, nameB, weight] <- states
+		find the state in the list w/ name = nameA <- stateA
+		find the state in the list w/ name = nameB <- stateB
+		stateA.addAdjacentState(stateB, weight)
+		stateB.addAdjacentState(stateA, weight)
 
-	# read in the list of targets
-	# make a dictionary of Target objects
+	create an AggProblem(states, state[0])
+	solution = search(algo, problem)
+	print the date from solution to the screen
+	put the date from solution into a file'''
 
-	# for every Sensor in the array
-		# do a search to find the nearest target?
-		# what does the search return?
-			# t/f if the sensor finds a target
-			# or the target that the sensor is monitoring
-
-def aggregation(file, search_algo):
-
-
-def search(algo):
+def search(algo, problem):
 	if algo is "bfs":
 		return bfs(problem)
 	elif algo is "unicost":

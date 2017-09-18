@@ -2,6 +2,7 @@ General Questions
 
 * What type of file is the problem configuration file? - this would be so much easier if we were given a file to test the program on
 * Node class
+* Problem class
 
 Monitoring Questions
 
@@ -9,6 +10,8 @@ Monitoring Questions
 * Sensor class - inherets Node
 * Target class - inherets Node
 * What is P(sub t)?
+* P(sub t) = Sensor.power - distance between sensor and target
+* Goal: All the targets are being monitored by a sensor
 
 Aggregation Questions
 
