@@ -70,13 +70,6 @@ def child_node(problem, parent_node, action):
 	return new Node(child_state, parent_node, action, path_cost)
 
 class AggState:
-	'''
-	name = String
-	start = int
-	stop = int
- adj_edges = list of tuples (Node obj, int)
-	visited = boolean
-	'''
 	def __init__(self, name, start, stop, adj_edges=[], visited=False):
 		self.name = name
 		self.start = start
@@ -95,20 +88,13 @@ class Node:
 		self.action = action
 		self.path_cost = path_cost
 
-class AggregationProblem:
-	'''
-	states = combination of possible states
-	initial_state = where the agent starts
-	actions = given a state, the set of actions that can be found
-	transition_model = a description of each action
-	goal_test = given a state, is the goal achieved?
-	path_cost = numeric cost to each path
-	'''
-	def __init__(self, states, initial_state, path_cost):
+class AggProblem:
+	def __init__(self, states, initial_state, path_cost=0):
 		self.states = states # a list of all the states
 		self.initial_state = initial_state # starting node for traversing the graph
 		self.path_cost = path_cost
 
+	# given a state, return a list of all the states attached to it
 	def actions(state):
 		children = []
 		for new_state in state.adj_edges:
@@ -116,19 +102,23 @@ class AggregationProblem:
 
 		return children
 
+	# given the parent state and the child that needs returned
+	# find the child that's attached to the parent and return it
 	def result(parent_state, child_state):
-		# find the child that's attached to the parent and return it
 		for state in parent_state adj_edges:
 			if state[0] is child_state:
 				return child_state
 		return None
 
+	# return false if at least one of the states hasn't been visited
+	# true otherwise
 	def goal_test(state):
 		for n in self.states:
 			if n.visited = False:
 				return False
 		return True
 
+	# currently uncalled
 	def path_cost(stateA, stateB):
 		for edge in stateA adj_edges:
 			if edge[0] is stateB:
@@ -141,8 +131,6 @@ class AggregationProblem:
 			if state[0] is stateB:
 				return state[1]
 		return 0
-
-
 
 class Solution:
 	def __init__(self):
