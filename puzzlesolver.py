@@ -25,19 +25,7 @@ def monitor(file, search_algo):
 			# or the target that the sensor is monitoring
 
 def aggregation(file, search_algo):
-	# read in list of nodes
-	# make a dictionary of Node objects [Node_name: Node object]
 
-	# for every line until EOF
-		# get first node name
-		# get the corresponding Node object based on name
-		# get second node name
-		# get corresponding Node object based on name
-		# get weight
-		# firstNode.addAdjacentNode((secondNode, weight))
-		# secondNode.addAdjacentNode((firstNode, weight))
-
-	# what is the start state?
 
 def search(algo):
 	if algo is "bfs":
@@ -53,121 +41,108 @@ def search(algo):
 	else:
 		return None
 
-def bfs(problem, solution):
-	initial_state = problem.initial_state
-	path_cost = 0
+def bfs(problem):
+	node = Node(problem.initial_state, None, None, 0)
 
-	if problem.goal_test(initial_state)
-		return Solution()
+	if problem.goal_test(node.state):
+		return new Solution(node)
 
-	frontier = Queue.Queue(0)
-	frontier.put(initial_state)
-	solution.frontier_space += 1
+	frontier = new Queue.Queue()
 	explored = []
 
 	while True:
-		if frontier.empty():
-			solution.path = None
-			return solution
-		curr_state = frontier.get()
-		explored.append(curr_state)
-		solution.explored_space += 1
+		if frontier.empty()
+			return None
+		node = frontier.get()
+		explored.append(node.state)
+		node.state.visited = True
 
-		number_of_children = problem.get_number_of_children(curr_state)
+		for action in problem.actions(node.state):
+			child = child_node(problem, node, action)
+			if child.state not in explored and child.state not in frontier:
+				if problem.goal_test(child.state):
+					return new Solution(child)
+					frontier.put(child)
 
-		for i in range(0, number_of_children):
-			child = problem.get_next_state(curr_state, i)
-			if child not in explored and child not in frontier:
-				if problem.goal_test(child) == True:
-					return solution
-				frontier.put(child);
-				if frontier.length > solution.frontier_space:
-					solution.frontier_space = frontier.length
+def child_node(problem, parent_node, action):
+	child_state = problem.result(parent_node.state, action)
+	path_cost = parent.path_cost + problem.step_cost(parent.state, action)
+	return new Node(child_state, parent_node, action, path_cost)
 
-class Node:
+class AggState:
 	'''
 	name = String
 	start = int
 	stop = int
-	adj_nodes = list
+ adj_edges = list of tuples (Node obj, int)
 	visited = boolean
 	'''
-	def __init__(self, name, start, stop, adj_nodes=[], visited=False):
+	def __init__(self, name, start, stop, adj_edges=[], visited=False):
 		self.name = name
 		self.start = start
 		self.stop = stop
-		self.adj_nodes = adj_nodes
+		self.adj_edges = adj_edges
 		self.visited = visited
 
-	def addAdjacentNode(node):
+	def addAdjacentState(state, weight):
 		# add a new node to the list of nodes connected to this object
-		self.adj_nodes.append(node)
+		self adj_edges.append((state, weight))
 
-class Sensor(Node):
-	'''
-	power = int
-	'''
-	def __init__(self, name, start, stop, power):
-		Node.__init__(self, name, start, stop)
-		self.power = power
-
-	'''
-	t_start = int
-	t_stop = int
-	'''
-	def set_power(t_start, t_stop):
-		euclidean_distance = Math.sqrt((self.start - t_start)^2 + (self.stop - t_stop)^2)
-		self.power = self.power - euclidean_distance
-
-		if self.power < 0:
-			return False
-		else:
-			return True
-
-
-class Target(Node):
-	def __init__(self, name, start, stop, monitored=False):
-		Node.__init__(self, name, start, stop)
-
-class MonitorProblem:
-	initial_state
-	actions = []
-
-	def goal_test(state):
-		# test if the goal has been reached
-		# return t/f
-		# how do you you do that?
-		pass
-
-	def get_next_state():
-		pass
-
-	def get_number_of_children():
-		pass
+class Node:
+	def __init__(self, state, parent, action, path_cost):
+		self.state = state
+		self.parent = parent
+		self.action = action
+		self.path_cost = path_cost
 
 class AggregationProblem:
 	'''
-	nodes = list of Node objects
-	initial_state = Node object
+	states = combination of possible states
+	initial_state = where the agent starts
+	actions = given a state, the set of actions that can be found
+	transition_model = a description of each action
+	goal_test = given a state, is the goal achieved?
+	path_cost = numeric cost to each path
 	'''
-	def __init__(self, nodes, initial_state):
-		self.nodes = nodes # a list of all the nodes
+	def __init__(self, states, initial_state, path_cost):
+		self.states = states # a list of all the states
 		self.initial_state = initial_state # starting node for traversing the graph
+		self.path_cost = path_cost
+
+	def actions(state):
+		children = []
+		for new_state in state.adj_edges:
+			children.append(new_state[0])
+
+		return children
+
+	def result(parent_state, child_state):
+		# find the child that's attached to the parent and return it
+		for state in parent_state adj_edges:
+			if state[0] is child_state:
+				return child_state
+		return None
 
 	def goal_test(state):
-		for n in self.nodes:
+		for n in self.states:
 			if n.visited = False:
 				return False
 		return True
 
-	def get_next_state(state, i):
-		# given the current node and index where the next child node lives
-		# return the next child node
-		return state.adj_nodes[i]
+	def path_cost(stateA, stateB):
+		for edge in stateA adj_edges:
+			if edge[0] is stateB:
+				self.path_cost += edge[1]
+				break
 
-	def get_number_of_children(state):
-		# given the current state, return the number of nodes attached to it
-		return len(state.adj_nodes)
+	# find the weight of the edge between these two states
+	def step_cost(stateA, stateB):
+		for state in stateA adj_edges:
+			if state[0] is stateB:
+				return state[1]
+		return 0
+
+
 
 class Solution:
 	def __init__(self):
