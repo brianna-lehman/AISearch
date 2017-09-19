@@ -48,7 +48,7 @@ def bfs(problem):
 	solution.time += 1
 
 	if problem.goal_test(node.state):
-		return solution(node)
+		return solution
 
 	frontier = Queue.Queue()
 	frontier.put(node)
@@ -66,14 +66,25 @@ def bfs(problem):
 
 		for action in problem.actions(node.state):
 			child = child_node(problem, node, action)
+
 			solution.time += 1
+
 			if child.state not in explored and child.state not in frontier:
+				solution.path_cost += child.path_cost
 				if problem.goal_test(child.state):
 					solution.path.append(child.state)
-					return Solution(child)
+					return solution
 				frontier.put(child)
 				if len(frontier) > solution.frontier_space:
 					solution.frontier_space = len(frontier)
+
+def unicost(problem):
+	node = Node(problem.initial_state, None, None, 0)
+	solution = Solution()
+	solution.time += 1
+
+	frontier = Queue.PriorityQueue()
+	explored = []
 
 def child_node(problem, parent_node, action):
 	child_state = problem.result(parent_node.state, action)
@@ -86,6 +97,9 @@ class Node:
 		self.parent = parent
 		self.action = action
 		self.path_cost = path_cost
+
+	def __cmp__(self, other):
+		return cmp(self.path_cost, other.path_cost)
 
 class Solution:
 	def __init__(self):
@@ -104,9 +118,9 @@ class AggState:
 		self.edges = edges
 		self.visited = visited
 
-	def addAdjacentState(state, weight):
+	def addAdjacentState(self, state, weight):
 		# add a new node to the list of nodes connected to this object
-		self edges.update({state: weight})
+		self.edges.update({state: weight})
 
 class AggProblem:
 	def __init__(self, states, initial_state, path_cost=0):
@@ -115,7 +129,7 @@ class AggProblem:
 		self.path_cost = path_cost
 
 	# given a state, return a list of all the states attached to it
-	def actions(state):
+	def actions(self, state):
 		children = []
 		for new_state in state.edges:
 			children.append(new_state[0])
@@ -124,27 +138,27 @@ class AggProblem:
 
 	# given the parent state and the child that needs returned
 	# find if the child is attached to the parent and return it
-	def result(parent_state, child_state):
+	def result(self, parent_state, child_state):
 		if child_state in parent_state.edges.keys():
 			return child_state
 		return None
 
 	# return false if at least one of the states hasn't been visited
 	# true otherwise
-	def goal_test(state):
+	def goal_test(self, state):
 		for n in self.states:
 			if n.visited = False:
 				return False
 		return True
 
 	# currently uncalled
-	def path_cost(stateA, stateB):
+	def path_cost(self, stateA, stateB):
 		if stateB in edge.keys():
 			self.path_cost += edge[stateB]
 			break
 
 	# find the weight of the edge between these two states
-	def step_cost(stateA, stateB):
+	def step_cost(self, stateA, stateB):
 		if stateB in stateA.edges.keys():
 			return stateA.edges[stateB]
 		return 0
