@@ -23,7 +23,7 @@ def aggregation(file, algo):
 		stateA.addAdjacentState(stateB, weight)
 		stateB.addAdjacentState(stateA, weight)
 
-	create an AggProblem(states, state[0])
+	problem = AggProblem(states, state[0], 0)
 	solution = search(algo, problem)
 	print the date from solution to the screen
 	put the date from solution into a file'''
@@ -44,11 +44,14 @@ def search(algo, problem):
 
 def bfs(problem):
 	node = Node(problem.initial_state, None, None, 0)
+	solution = Solution()
+	solution.time += 1
 
 	if problem.goal_test(node.state):
-		return new Solution(node)
+		return solution(node)
 
-	frontier = new Queue.Queue()
+	frontier = Queue.Queue()
+	frontier.put(node)
 	explored = []
 
 	while True:
@@ -56,31 +59,26 @@ def bfs(problem):
 			return None
 		node = frontier.get()
 		explored.append(node.state)
+
 		node.state.visited = True
+		solution.path.append(node.state)
+		solution.explored_space += 1
 
 		for action in problem.actions(node.state):
 			child = child_node(problem, node, action)
+			solution.time += 1
 			if child.state not in explored and child.state not in frontier:
 				if problem.goal_test(child.state):
-					return new Solution(child)
-					frontier.put(child)
+					solution.path.append(child.state)
+					return Solution(child)
+				frontier.put(child)
+				if len(frontier) > solution.frontier_space:
+					solution.frontier_space = len(frontier)
 
 def child_node(problem, parent_node, action):
 	child_state = problem.result(parent_node.state, action)
 	path_cost = parent.path_cost + problem.step_cost(parent.state, action)
-	return new Node(child_state, parent_node, action, path_cost)
-
-class AggState:
-	def __init__(self, name, start, stop, adj_edges=[], visited=False):
-		self.name = name
-		self.start = start
-		self.stop = stop
-		self.adj_edges = adj_edges
-		self.visited = visited
-
-	def addAdjacentState(state, weight):
-		# add a new node to the list of nodes connected to this object
-		self adj_edges.append((state, weight))
+	return Node(child_state, parent_node, action, path_cost)
 
 class Node:
 	def __init__(self, state, parent, action, path_cost):
@@ -88,6 +86,27 @@ class Node:
 		self.parent = parent
 		self.action = action
 		self.path_cost = path_cost
+
+class Solution:
+	def __init__(self):
+		self.path = [] # array of states that lead to the solved solution (or None)
+		self.time = 0 # total number of nodes created
+		self.frontier_space = 0 # largest number of nodes in frontier
+		self.explored_space = 0 # largest number of nodes in explored
+		self.cost = 0 	# for monitor cost = P(sub t)
+						# for agg cost = sum of weights in the path to visit all nodes
+
+class AggState:
+	def __init__(self, name, start, stop, edges=[], visited=False):
+		self.name = name
+		self.start = start
+		self.stop = stop
+		self.edges = edges
+		self.visited = visited
+
+	def addAdjacentState(state, weight):
+		# add a new node to the list of nodes connected to this object
+		self edges.update({state: weight})
 
 class AggProblem:
 	def __init__(self, states, initial_state, path_cost=0):
@@ -98,17 +117,16 @@ class AggProblem:
 	# given a state, return a list of all the states attached to it
 	def actions(state):
 		children = []
-		for new_state in state.adj_edges:
+		for new_state in state.edges:
 			children.append(new_state[0])
 
 		return children
 
 	# given the parent state and the child that needs returned
-	# find the child that's attached to the parent and return it
+	# find if the child is attached to the parent and return it
 	def result(parent_state, child_state):
-		for state in parent_state adj_edges:
-			if state[0] is child_state:
-				return child_state
+		if child_state in parent_state.edges.keys():
+			return child_state
 		return None
 
 	# return false if at least one of the states hasn't been visited
@@ -121,26 +139,15 @@ class AggProblem:
 
 	# currently uncalled
 	def path_cost(stateA, stateB):
-		for edge in stateA adj_edges:
-			if edge[0] is stateB:
-				self.path_cost += edge[1]
-				break
+		if stateB in edge.keys():
+			self.path_cost += edge[stateB]
+			break
 
 	# find the weight of the edge between these two states
 	def step_cost(stateA, stateB):
-		for state in stateA adj_edges:
-			if state[0] is stateB:
-				return state[1]
+		if stateB in stateA.edges.keys():
+			return stateA.edges[stateB]
 		return 0
-
-class Solution:
-	def __init__(self):
-		self.path = [] # array of states that lead to the solved solution (or None)
-		self.time = 0 # total number of nodes created
-		self.frontier_space = 0 # largest number of nodes in frontier
-		self.explored_space = 0 # largest number of nodes in explored
-		self.cost = 0 	# for monitor cost = P(sub t)
-						# for agg cost = sum of weights in the path to visit all nodes
 
 if __name__ == "__main__":
 	main()
