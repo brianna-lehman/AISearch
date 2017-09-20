@@ -9,6 +9,12 @@ class Me:
 	def __cmp__(self, other):
 		return cmp(self.age, other.age)
 
+class AggState:
+	def __init__(self, name, start, stop):
+		self.name = name
+		self.start = start
+		self.stop = stop
+
 def main():
 	filename = sys.argv[1]
 	search = sys.argv[2]
@@ -17,9 +23,7 @@ def main():
 
 	problem = file.readline()
 
-	print(problem)
-	print(problem.rstrip())
-	print(search)
+	readFile(file)
 
 	file.close()
 
@@ -34,19 +38,25 @@ def main():
 	q.put(you)
 	q.put(we)
 
-	if me in q.queue:
-		print ("Object in queue")
-	if me in l:
-		print ("Object in list")
-	if them not in q.queue:
-		print ("Object not in queue")
-	if them not in l:
-		print ("Object not in list")
-	if them not in q.queue:
-		print ("Object is not in queue")
-	if them not in l:
-		print ("Object is not in list")
+	print q
 
+def readFile(file):
+	listOfStates = []
+
+	stringOfStates = file.readline().strip().replace(",", " ").strip('[]').strip(',')
+	listOfStateStrings = stringOfStates.split('  ')
+
+	for x in listOfStateStrings:
+		print x
+
+	for stateString in listOfStateStrings:
+		stateString = stateString.strip('()')
+		state = stateString.split(' ')
+		aggState = AggState(state[0].strip(""), int(state[1]), int(state[2]))
+		listOfStates.append(aggState)
+
+	for line in file:
+		print line
 
 if __name__ == "__main__":
 	main()

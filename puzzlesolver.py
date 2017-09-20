@@ -30,18 +30,43 @@ def aggregation(file, algo):
 	print the date from solution to the screen
 	put the date from solution into a file'''
 
-	stringOfStates = file.readline()							# "[("N_1",1,1), ("N_2",2,3), ("N_3",1,5)]"
-	stringOfStates.strip()										# "[("N_1",1,1),("N_2",2,3),("N_3",1,5)]"
-	stringOfStates.strip('[]')									# "("N_1",1,1),("N_2",2,3),("N_3",1,5)"
-	listOfStates = stringOfStates.split(',')					# ["("N_1",1,1)", "("N_2",2,3)", "("N_3",1,5)"]
+	listOfStates = []
 
-	states = []
+	stringOfStates = file.readline().strip()
+	stringOfStates = stringOfStates.replace(",", " ")
+	stringOfStates = stringOfStates.strip('[]')
+	stringOfStates = stringOfStates.strip(',')
+	listOfStateStrings = stringOfStates.split('  ')
 
-	for stateString in listOfStateStrings:						# "("N_1",1,1)"
-		stateString.strip('()')									# ""N_1",1,1"
-		state = stateString.split(',')							# ["N_1", 1, 1]
-		aggState = AggState(state[0], state[1], state[2])
-		states.append(state)
+	for stateString in listOfStateStrings:
+		stateString = stateString.strip('()')
+		state = stateString.split(' ')
+		aggState = AggState(state[0].strip(""), int(state[1]), int(state[2]))
+		listOfStates.append(aggState)
+
+	for line in file:
+		edge = line.strip().strip('()').split(" ")
+		stateA_name = edge[0].strip('""')
+		stateB_name = edge[1].strip('""')
+		weight = int(edge[2])
+		for s in listOfStates:
+			if s.name is stateA_name:
+				stateA = s
+			if s.name is stateB_name:
+				stateB = s
+
+		if stateA is None or stateB is None:
+			print "Error - one of the states doesn't exist"
+		else:
+			stateA.addAdjacentState(stateB, weight)
+			stateB.addAdjacentState(stateA, weight)
+
+	problem = AggProblem(listOfStates, listOfStates[0], 0)
+	solution = search(problem)
+
+	# print fields from solution to screen
+	# write fields to file
+
 
 def search(algo, problem):
 	if algo is "bfs":
