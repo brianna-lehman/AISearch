@@ -30,6 +30,19 @@ def aggregation(file, algo):
 	print the date from solution to the screen
 	put the date from solution into a file'''
 
+	stringOfStates = file.readline()							# "[("N_1",1,1), ("N_2",2,3), ("N_3",1,5)]"
+	stringOfStates.strip()										# "[("N_1",1,1),("N_2",2,3),("N_3",1,5)]"
+	stringOfStates.strip('[]')									# "("N_1",1,1),("N_2",2,3),("N_3",1,5)"
+	listOfStates = stringOfStates.split(',')					# ["("N_1",1,1)", "("N_2",2,3)", "("N_3",1,5)"]
+
+	states = []
+
+	for stateString in listOfStateStrings:						# "("N_1",1,1)"
+		stateString.strip('()')									# ""N_1",1,1"
+		state = stateString.split(',')							# ["N_1", 1, 1]
+		aggState = AggState(state[0], state[1], state[2])
+		states.append(state)
+
 def search(algo, problem):
 	if algo is "bfs":
 		return bfs(problem)
@@ -71,7 +84,7 @@ def bfs(problem):
 
 			solution.time += 1
 
-			if child.state not in explored and child not in frontier:
+			if child.state not in explored and child not in frontier.queue:
 				solution.path_cost += child.path_cost
 				if problem.goal_test(child.state):
 					solution.path.append(child.state)
@@ -106,14 +119,15 @@ def unicost(problem):
 			child = child_node(problem, node, action)
 			solution.time += 1
 
-			if child.state not in explored and child not in frontier:
+			if child.state not in explored and child not in frontier.queue:
 				frontier.put(child)
+				frontier_set.append(child.state)
 			elif child.state in frontier_set:
 				for node in frontier.queue:
 					if child.state is node.state and node.path_cost > child.path_cost:
-						# take node out of frontier
-						# put child in frontier
-						# put child.state in frontier_set
+						# take node out of frontier priority queue
+						frontier.put(child)
+						frontier_set.append(child.state)
 
 def child_node(problem, parent_node, action):
 	child_state = problem.result(parent_node.state, action)
