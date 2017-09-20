@@ -154,13 +154,31 @@ def unicost(problem):
 						frontier.put(child)
 						frontier_set.append(child.state)
 
+def iddfs(problem):
+	for depth in xrange(sys.maxint):
+		solution = depth_limited_search(problem, depth)
+		if solution is not 'cutoff':
+			return solution
+
+def depth_limited_search(problem, limit):
+	return recursive_dls(Node(problem.initial_state), problem, Solution(), limit)
+
+def recursive_dls(node, problem, solution, limit):
+	if problem.goal_test(node.state):
+		return solution
+	elif limit == 0:
+		return 'cutoff'
+	else:
+		atCutoff = False
+
+
 def child_node(problem, parent_node, action):
 	child_state = problem.result(parent_node.state, action)
 	path_cost = parent.path_cost + problem.step_cost(parent.state, action)
 	return Node(child_state, parent_node, action, path_cost)
 
 class Node:
-	def __init__(self, state, parent, action, path_cost):
+	def __init__(self, state, parent=None, action=None, path_cost=0):
 		self.state = state
 		self.parent = parent
 		self.action = action
