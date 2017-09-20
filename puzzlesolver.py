@@ -1,11 +1,13 @@
 import sys
+import Queue
 from math import sqrt
 
 def main():
 	problem_filename = sys.argv[1]
 	search_algo = sys.argv[2]
-	# open this file
-	# read in the first line (problem)
+	file = open(problem_filename, 'r')
+	problem = file.readline().rstrip()
+
 	if problem is "monitor":
 		monitor(file, search_algo)
 	elif problem is "aggregation":
@@ -69,7 +71,7 @@ def bfs(problem):
 
 			solution.time += 1
 
-			if child.state not in explored and child.state not in frontier:
+			if child.state not in explored and child not in frontier:
 				solution.path_cost += child.path_cost
 				if problem.goal_test(child.state):
 					solution.path.append(child.state)
@@ -84,7 +86,34 @@ def unicost(problem):
 	solution.time += 1
 
 	frontier = Queue.PriorityQueue()
+	frontier.put(node)
+	frontier_set = [node.state]
 	explored = []
+
+	while True:
+		if frontier.empty()
+			return None
+
+		node = frontier.get()
+		frontier_set.remove(node.state)
+
+		if problem.goal_test(node.state):
+			return solution
+
+		explored.append(node.state)
+
+		for action in problem.actions(node.state):
+			child = child_node(problem, node, action)
+			solution.time += 1
+
+			if child.state not in explored and child not in frontier:
+				frontier.put(child)
+			elif child.state in frontier_set:
+				for node in frontier.queue:
+					if child.state is node.state and node.path_cost > child.path_cost:
+						# take node out of frontier
+						# put child in frontier
+						# put child.state in frontier_set
 
 def child_node(problem, parent_node, action):
 	child_state = problem.result(parent_node.state, action)

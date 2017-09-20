@@ -1,16 +1,10 @@
 General Questions
 
-* What type of file is the problem configuration file? - this would be so much easier if we were given a file to test the program on
-* Node class
-* Problem class
+* What type of file is the problem configuration file?
 
 Monitoring Questions
 
-* Euclidean distance: given (a, b) & (x, y): sqrt( (a-x)^2 + (b-y)^2 )
-* Sensor class - inherets Node
-* Target class - inherets Node
-* What is P(sub t)?
-* P(sub t) = Sensor.power - distance between sensor and target
+* visualize what the sensor/target search is doing, exactly?
 * Goal: All the targets are being monitored by a sensor
 
 Aggregation Questions

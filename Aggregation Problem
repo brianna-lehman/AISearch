@@ -1,0 +1,26 @@
+Aggregation State
+id = the name of the state (N_1, N_2, etc)
+start
+stop
+adj_state = a list of tuples that contain a state this state is attached to and the weight of the edge
+
+Aggregation Node
+state = State object that this node represents
+parent = the parent node that this node is attached to in the search tree
+action = action applied to parent to generate this node
+path_cost = parent.path_cost + weight
+
+Aggregation Problem
+states = combination of possible states
+initial_state = where the agent starts
+actions = given a state, the set of actions that can be found
+transition_model = a description of each action Result(state, action)
+goal_test = given a state, is the goal achieved?
+path_cost = numeric cost to each path
+
+states = list of all the states that are created from the file
+initial_state = any random state that starts the search
+actions = given state, return a list of states that the given state can go to
+transition_model = given a parent state and an action (ie a new state to go to) create a node and return it
+goal_test = return true if all states have been visited, false otherwise
+path_cost = former path cost + weight to go to new node
