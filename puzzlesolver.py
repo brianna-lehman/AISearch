@@ -2,6 +2,8 @@ import sys
 import Queue
 from math import sqrt
 
+''' PROCESSING FILES '''
+
 def main():
 	problem_filename = sys.argv[1]
 	search_algo = sys.argv[2]
@@ -11,31 +13,36 @@ def main():
 	if problem is "monitor":
 		monitor(file, search_algo)
 	elif problem is "aggregation":
-		aggregation(file, search_algo);
+		aggregation(file, search_algo)
 
+def monitor(file, algo):
+	listOfSensors = []
+
+	stringOfSensors = file.readline().strip().replace(',', ' ').strip('[]')
+	listOfSensorStrings = stringOfSensors.split('  ')
+
+	for sensorString in listOfSensorStrings:
+		sensorString = sensorString.strip('()')
+		sensor_list = sensorString.split(' ')
+		sensorState = MonitorState(sensor_list[0].strip(""), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
+		listOfSensors.append(sensorState)
+
+	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
+	listOfTargetStrings = stringOfTargets.split('  ')
+
+	for targetString in listOfTargetStrings:
+		targetString = targetString.strip('()')
+		target_list = targetString.split(' ')
+		targetState = MonitorState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]))
+
+
+'''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
-	'''read in the second line of the file
-	for every element in the returned list
-		create an AggState(name, start, stop)
-		put the new state object in a list
-	for every line until EOF
-		create a list out of the line [nameA, nameB, weight] <- states
-		find the state in the list w/ name = nameA <- stateA
-		find the state in the list w/ name = nameB <- stateB
-		stateA.addAdjacentState(stateB, weight)
-		stateB.addAdjacentState(stateA, weight)
-
-	problem = AggProblem(states, state[0], 0)
-	solution = search(algo, problem)
-	print the date from solution to the screen
-	put the date from solution into a file'''
-
 	listOfStates = []
 
 	stringOfStates = file.readline().strip()
-	stringOfStates = stringOfStates.replace(",", " ")
+	stringOfStates = stringOfStates.replace(',', ' ')
 	stringOfStates = stringOfStates.strip('[]')
-	stringOfStates = stringOfStates.strip(',')
 	listOfStateStrings = stringOfStates.split('  ')
 
 	for stateString in listOfStateStrings:
@@ -67,7 +74,7 @@ def aggregation(file, algo):
 	# print fields from solution to screen
 	# write fields to file
 
-
+'''running the appropriate algorithm and returning the Solution object'''
 def search(algo, problem):
 	if algo is "bfs":
 		return bfs(problem)
@@ -82,6 +89,10 @@ def search(algo, problem):
 	else:
 		return None
 
+
+''' SEARCHING ALGORITHMS '''
+
+'''unfinished - will aways return None'''
 def bfs(problem):
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
@@ -96,7 +107,7 @@ def bfs(problem):
 
 	while True:
 		if frontier.empty()
-			return None
+			return Solution()
 		node = frontier.get()
 		explored.append(node.state)
 
@@ -105,7 +116,7 @@ def bfs(problem):
 		solution.explored_space += 1
 
 		for action in problem.actions(node.state):
-			child = child_node(problem, node, action)
+			child = node.child_node(problem, action)
 
 			solution.time += 1
 
@@ -118,6 +129,7 @@ def bfs(problem):
 				if len(frontier) > solution.frontier_space:
 					solution.frontier_space = len(frontier)
 
+'''unfinished - how to take an element out of a priority queue (not at the front)'''
 def unicost(problem):
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
@@ -130,7 +142,7 @@ def unicost(problem):
 
 	while True:
 		if frontier.empty()
-			return None
+			return Solution()
 
 		node = frontier.get()
 		frontier_set.remove(node.state)
@@ -141,7 +153,7 @@ def unicost(problem):
 		explored.append(node.state)
 
 		for action in problem.actions(node.state):
-			child = child_node(problem, node, action)
+			child = node.child_node(problem, action)
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
@@ -172,10 +184,13 @@ def recursive_dls(node, problem, solution, limit):
 		atCutoff = False
 
 
-def child_node(problem, parent_node, action):
-	child_state = problem.result(parent_node.state, action)
-	path_cost = parent.path_cost + problem.step_cost(parent.state, action)
-	return Node(child_state, parent_node, action, path_cost)
+''' STANDARD CLASS DEFINITIONS '''
+
+class State:
+	def __init__(self, name, start, stop):
+		self.name = name
+		self.start = start
+		self.stop = stop
 
 class Node:
 	def __init__(self, state, parent=None, action=None, path_cost=0):
@@ -187,6 +202,11 @@ class Node:
 	def __cmp__(self, other):
 		return cmp(self.path_cost, other.path_cost)
 
+	def child_node(self, problem, action):
+		child_state = problem.result(self.state, action)
+		path_cost = self.path_cost + problem.step_cost(self.state, action)
+		return Node(child_state, self, action, path_cost)
+
 class Solution:
 	def __init__(self):
 		self.path = [] # array of states that lead to the solved solution (or None)
@@ -196,11 +216,24 @@ class Solution:
 		self.cost = 0 	# for monitor cost = P(sub t)
 						# for agg cost = sum of weights in the path to visit all nodes
 
-class AggState:
+''' PROBLEM SPECIFIC CLASS DEFINITIONS '''
+
+''' MONITOR PROBLEM '''
+class SensorState(State):
+	def __init__(self, name, start, stop, power=0, edges=[]):
+		State.__init__(self, name, start, stop)
+		self.power = power
+		self.edges = edges
+
+class TargetState(State):
+	def __init__(self, name, start, stop, visited=False):
+		State.__init__(self, name, start, stop)
+		self.visited = visited
+
+''' AGGREGATION PROBLEM '''
+class AggState(State):
 	def __init__(self, name, start, stop, edges=[], visited=False):
-		self.name = name
-		self.start = start
-		self.stop = stop
+		State.__init__(self, name, start, stop)
 		self.edges = edges
 		self.visited = visited
 

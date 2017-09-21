@@ -43,8 +43,9 @@ def main():
 def readFile(file):
 	listOfStates = []
 
-	stringOfStates = file.readline().strip().replace(",", " ").strip('[]').strip(',')
+	stringOfStates = file.readline().strip().replace(",", " ").strip('[]')
 	listOfStateStrings = stringOfStates.split('  ')
+	print stringOfStates
 
 	for x in listOfStateStrings:
 		print x
