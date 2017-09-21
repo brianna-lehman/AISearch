@@ -24,7 +24,7 @@ def monitor(file, algo):
 	for sensorString in listOfSensorStrings:
 		sensorString = sensorString.strip('()')
 		sensor_list = sensorString.split(' ')
-		sensorState = MonitorState(sensor_list[0].strip(""), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
+		sensorState = SensorState(sensor_list[0].strip(""), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
 		listOfSensors.append(sensorState)
 
 	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
@@ -33,7 +33,10 @@ def monitor(file, algo):
 	for targetString in listOfTargetStrings:
 		targetString = targetString.strip('()')
 		target_list = targetString.split(' ')
-		targetState = MonitorState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]))
+		targetState = TargetState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]))
+
+		for sensor in listOfSensors:
+			sensor.addAdjacentState(targetState)
 
 
 '''unfinished - processing the file and running the search to find the solution'''
@@ -225,10 +228,35 @@ class SensorState(State):
 		self.power = power
 		self.edges = edges
 
+	def addAdjacentState(self, target):
+		self.edges.update(target)
+
 class TargetState(State):
 	def __init__(self, name, start, stop, visited=False):
 		State.__init__(self, name, start, stop)
 		self.visited = visited
+
+class MonitorProblem():
+	def __init__(self, states, initial_state, path_cost=0):
+		self.states = states
+		self.initial_state = initial_state
+		self.path_cost = path_cost
+
+	''''''
+	def actions(self, state):
+		pass
+
+	def result(self, state, action):
+		pass
+
+	def goal_test(self, state):
+		pass
+
+	def path_cost(self, stateA, stateB):
+		pass
+
+	def step_cost(self, sensor, target):
+		pass
 
 ''' AGGREGATION PROBLEM '''
 class AggState(State):
