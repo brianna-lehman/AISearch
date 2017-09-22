@@ -67,19 +67,19 @@ def aggregation(file, algo):
 		state_B = None
 
 		edge = line.strip().strip('()').replace(',', ' ').split("  ")
-		print len(edge)
 		stateA_name = edge[0].replace('"', '')
 		stateB_name = edge[1].replace('"', '')
 		weight = int(edge[2])
+		print "%s %s %d" %(stateA_name, stateB_name, weight)
 		for s in listOfStates:
 			if s.name == stateA_name:
 				global stateA
 				stateA = s
-				print "Assigned StateA"
-			if s.name == stateB_name:
+			elif s.name == stateB_name:
 				global stateB
 				stateB = s
-				print "Assigned StateB"
+			else:
+				pass
 
 		stateA.addAdjacentState(stateB, weight)
 		stateB.addAdjacentState(stateA, weight)
@@ -90,6 +90,13 @@ def aggregation(file, algo):
 	# print fields from solution to screen
 	# write fields to file
 	write(solution)
+	printGraph(listOfStates)
+
+def printGraph(listOfStates):
+	for state in listOfStates:
+		print "State %s has these children: " %state.name
+		for child_state, weight in state.edges.items():
+			print "\tChild %s Weight %d" %(child_state.name, weight)
 
 def write(solution):
 	for x in solution.path:
@@ -102,15 +109,15 @@ def write(solution):
 
 '''running the appropriate algorithm and returning the Solution object'''
 def search(algo, problem):
-	if algo is "bfs":
+	if algo == "bfs":
 		return bfs(problem)
-	elif algo is "unicost":
+	elif algo == "unicost":
 		return unicost(problem)
-	elif algo is "iddfs":
+	elif algo == "iddfs":
 		return iddfs(problem)
-	elif algo is "greedy":
+	elif algo == "greedy":
 		return greedy()
-	elif algo is "Astar":
+	elif algo == "Astar":
 		return astar()
 	else:
 		return None
@@ -120,7 +127,6 @@ def search(algo, problem):
 
 '''unfinished - will aways return None'''
 def bfs(problem):
-	print "Inside bfs"
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
@@ -131,30 +137,35 @@ def bfs(problem):
 	frontier = Queue.Queue()
 	frontier.put(node)
 	explored = []
+	x = 0
 
 	while True:
 		if frontier.empty():
-			return Solution()
+			return solution
 		node = frontier.get()
 		explored.append(node.state)
+
+		print "Taking node %s from frontier" %node.state.name
 
 		node.state.visited = True
 		solution.path.append(node.state)
 		solution.explored_space += 1
 
 		for action in problem.actions(node.state):
+			print action.name
 			child = node.child_node(problem, action)
 
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
+				print "Adding child %s of node %s to frontier" %(child.state.name, node.state.name)
 				solution.path_cost += child.path_cost
 				if problem.goal_test(child.state):
 					solution.path.append(child.state)
 					return solution
 				frontier.put(child)
-				if len(frontier) > solution.frontier_space:
-					solution.frontier_space = len(frontier)
+				if frontier.qsize() > solution.frontier_space:
+					solution.frontier_space = frontier.qsize()
 
 '''unfinished - how to take an element out of a priority queue (not at the front)'''
 '''def unicost(problem):
@@ -240,7 +251,7 @@ class Solution:
 		self.time = 0 # total number of nodes created
 		self.frontier_space = 0 # largest number of nodes in frontier
 		self.explored_space = 0 # largest number of nodes in explored
-		self.cost = 0 	# for monitor cost = P(sub t)
+		self.path_cost = 0 	# for monitor cost = P(sub t)
 						# for agg cost = sum of weights in the path to visit all nodes
 
 ''' PROBLEM SPECIFIC CLASS DEFINITIONS '''
@@ -289,14 +300,14 @@ class MonitorProblem():
 
 ''' AGGREGATION PROBLEM '''
 class AggState(State):
-	def __init__(self, name, start, stop, edges=[], visited=False):
+	def __init__(self, name, start, stop, edges={}, visited=False):
 		State.__init__(self, name, start, stop)
 		self.edges = edges
 		self.visited = visited
 
 	def addAdjacentState(self, state, weight):
 		# add a new node to the list of nodes connected to this object
-		self.edges.append({state: weight})
+		self.edges.update({state: weight})
 
 class AggProblem:
 	def __init__(self, states, initial_state, path_cost=0):
@@ -308,7 +319,7 @@ class AggProblem:
 	def actions(self, state):
 		children = []
 		for new_state in state.edges:
-			children.append(new_state[0])
+			children.append(new_state)
 
 		return children
 
