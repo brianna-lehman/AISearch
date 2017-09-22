@@ -38,8 +38,6 @@ def main():
 	q.put(you)
 	q.put(we)
 
-	print q
-
 def readFile(file):
 	listOfStates = []
 
@@ -56,8 +54,13 @@ def readFile(file):
 		aggState = AggState(state[0].strip(""), int(state[1]), int(state[2]))
 		listOfStates.append(aggState)
 
-	for line in file:
-		print line
+	write(listOfStates)
+
+def write(listOfStates):
+	for x in listOfStates:
+		print "Name %s" %x.name
+		print "Start %d" %x.start
+		print "Stop %d" %x.stop
 
 if __name__ == "__main__":
 	main()

@@ -10,12 +10,14 @@ def main():
 	file = open(problem_filename, 'r')
 	problem = file.readline().rstrip()
 
-	if problem is "monitor":
+	print "%s %s" %(problem_filename, problem)
+
+	if problem == "monitor":
 		monitor(file, search_algo)
-	elif problem is "aggregation":
+	elif problem == "aggregation":
 		aggregation(file, search_algo)
 
-def monitor(file, algo):
+'''def monitor(file, algo):
 	listOfSensors = []
 
 	stringOfSensors = file.readline().strip().replace(',', ' ').strip('[]')
@@ -30,17 +32,21 @@ def monitor(file, algo):
 	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
 	listOfTargetStrings = stringOfTargets.split('  ')
 
-	for targetString in listOfTargetStrings:
-		targetString = targetString.strip('()')
-		target_list = targetString.split(' ')
-		targetState = TargetState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]))
+	if len(listOfTargetStrings) > len(listOfSensors):
+		write(Solution()) # prints the data from the Solution object to the screen and to a file
+		sys.exit()
+	else:
+		for targetString in listOfTargetStrings:
+			targetString = targetString.strip('()')
+			target_list = targetString.split(' ')
+			targetState = TargetState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]))
 
-		for sensor in listOfSensors:
-			sensor.addAdjacentState(targetState)
-
+			for sensor in listOfSensors:
+				sensor.addAdjacentState(targetState)'''
 
 '''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
+	print "Inside aggregation"
 	listOfStates = []
 
 	stringOfStates = file.readline().strip()
@@ -51,31 +57,49 @@ def aggregation(file, algo):
 	for stateString in listOfStateStrings:
 		stateString = stateString.strip('()')
 		state = stateString.split(' ')
-		aggState = AggState(state[0].strip(""), int(state[1]), int(state[2]))
+		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]))
 		listOfStates.append(aggState)
 
 	for line in file:
+		state_A = None
+		state_B = None
+
 		edge = line.strip().strip('()').split(" ")
+		print "%s" %edge[0]
 		stateA_name = edge[0].strip('""')
+		print "%s" %stateA_name
 		stateB_name = edge[1].strip('""')
 		weight = int(edge[2])
 		for s in listOfStates:
-			if s.name is stateA_name:
+			print "Name of element being looked for %s" %stateA_name
+			print "Name of element in list %s" %s.name
+			if s.name == stateA_name:
+				global stateA
 				stateA = s
-			if s.name is stateB_name:
+				print "Assigned StateA"
+			if s.name == stateB_name:
+				global stateB
 				stateB = s
+				print "Assigned StateB"
 
-		if stateA is None or stateB is None:
-			print "Error - one of the states doesn't exist"
-		else:
-			stateA.addAdjacentState(stateB, weight)
-			stateB.addAdjacentState(stateA, weight)
+		stateA.addAdjacentState(stateB, weight)
+		stateB.addAdjacentState(stateA, weight)
 
 	problem = AggProblem(listOfStates, listOfStates[0], 0)
-	solution = search(problem)
+	solution = search(algo, problem)
 
 	# print fields from solution to screen
 	# write fields to file
+	write(solution)
+
+def write(solution):
+	for x in solution.path:
+		print "Path %s" %x.name
+
+	print "Time %d" %solution.time
+	print "Frontier space %d" %solution.frontier_space
+	print "Explored space %d" %solution.explored_space
+	print "Path cost %d" %solution.path_cost
 
 '''running the appropriate algorithm and returning the Solution object'''
 def search(algo, problem):
@@ -97,6 +121,7 @@ def search(algo, problem):
 
 '''unfinished - will aways return None'''
 def bfs(problem):
+	print "Inside bfs"
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
@@ -109,7 +134,7 @@ def bfs(problem):
 	explored = []
 
 	while True:
-		if frontier.empty()
+		if frontier.empty():
 			return Solution()
 		node = frontier.get()
 		explored.append(node.state)
@@ -133,7 +158,7 @@ def bfs(problem):
 					solution.frontier_space = len(frontier)
 
 '''unfinished - how to take an element out of a priority queue (not at the front)'''
-def unicost(problem):
+'''def unicost(problem):
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
@@ -144,7 +169,7 @@ def unicost(problem):
 	explored = []
 
 	while True:
-		if frontier.empty()
+		if frontier.empty():
 			return Solution()
 
 		node = frontier.get()
@@ -184,7 +209,7 @@ def recursive_dls(node, problem, solution, limit):
 	elif limit == 0:
 		return 'cutoff'
 	else:
-		atCutoff = False
+		atCutoff = False'''
 
 
 ''' STANDARD CLASS DEFINITIONS '''
@@ -242,10 +267,15 @@ class MonitorProblem():
 		self.initial_state = initial_state
 		self.path_cost = path_cost
 
-	''''''
+	''' given the state, what states can this state go to? '''
 	def actions(self, state):
 		pass
 
+	''' a state attaches itself to a new state
+		if the original state is a sensor:
+			state.power = state.power - euclideanDistance between sensor(state) and target(action)
+		if the original state is a target:
+			action.power = action.power - euclideanDistance between sensor(action) and target(state)'''
 	def result(self, state, action):
 		pass
 
@@ -294,7 +324,7 @@ class AggProblem:
 	# true otherwise
 	def goal_test(self, state):
 		for n in self.states:
-			if n.visited = False:
+			if n.visited == False:
 				return False
 		return True
 
@@ -302,7 +332,6 @@ class AggProblem:
 	def path_cost(self, stateA, stateB):
 		if stateB in edge.keys():
 			self.path_cost += edge[stateB]
-			break
 
 	# find the weight of the edge between these two states
 	def step_cost(self, stateA, stateB):
