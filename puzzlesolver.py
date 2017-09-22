@@ -1,5 +1,6 @@
 import sys
 import Queue
+import pdb
 from math import sqrt
 
 ''' PROCESSING FILES '''
@@ -60,19 +61,17 @@ def aggregation(file, algo):
 		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]))
 		listOfStates.append(aggState)
 
+		#pdb.set_trace()
 	for line in file:
 		state_A = None
 		state_B = None
 
-		edge = line.strip().strip('()').split(" ")
-		print "%s" %edge[0]
-		stateA_name = edge[0].strip('""')
-		print "%s" %stateA_name
-		stateB_name = edge[1].strip('""')
+		edge = line.strip().strip('()').replace(',', ' ').split("  ")
+		print len(edge)
+		stateA_name = edge[0].replace('"', '')
+		stateB_name = edge[1].replace('"', '')
 		weight = int(edge[2])
 		for s in listOfStates:
-			print "Name of element being looked for %s" %stateA_name
-			print "Name of element in list %s" %s.name
 			if s.name == stateA_name:
 				global stateA
 				stateA = s
@@ -297,7 +296,7 @@ class AggState(State):
 
 	def addAdjacentState(self, state, weight):
 		# add a new node to the list of nodes connected to this object
-		self.edges.update({state: weight})
+		self.edges.append({state: weight})
 
 class AggProblem:
 	def __init__(self, states, initial_state, path_cost=0):
