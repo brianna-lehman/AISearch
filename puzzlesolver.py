@@ -1,6 +1,7 @@
 import sys
 import Queue
 import pdb
+import time
 from math import sqrt
 
 ''' PROCESSING FILES '''
@@ -10,8 +11,6 @@ def main():
 	search_algo = sys.argv[2]
 	file = open(problem_filename, 'r')
 	problem = file.readline().rstrip()
-
-	print "%s %s" %(problem_filename, problem)
 
 	if problem == "monitor":
 		monitor(file, search_algo)
@@ -47,7 +46,6 @@ def main():
 
 '''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
-	print "Inside aggregation"
 	listOfStates = []
 
 	stringOfStates = file.readline().strip()
@@ -61,7 +59,6 @@ def aggregation(file, algo):
 		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]))
 		listOfStates.append(aggState)
 
-		#pdb.set_trace()
 	for line in file:
 		state_A = None
 		state_B = None
@@ -70,7 +67,6 @@ def aggregation(file, algo):
 		stateA_name = edge[0].replace('"', '')
 		stateB_name = edge[1].replace('"', '')
 		weight = int(edge[2])
-		print "%s %s %d" %(stateA_name, stateB_name, weight)
 		for s in listOfStates:
 			if s.name == stateA_name:
 				global stateA
@@ -90,13 +86,6 @@ def aggregation(file, algo):
 	# print fields from solution to screen
 	# write fields to file
 	write(solution)
-	printGraph(listOfStates)
-
-def printGraph(listOfStates):
-	for state in listOfStates:
-		print "State %s has these children: " %state.name
-		for child_state, weight in state.edges.items():
-			print "\tChild %s Weight %d" %(child_state.name, weight)
 
 def write(solution):
 	for x in solution.path:
@@ -137,7 +126,6 @@ def bfs(problem):
 	frontier = Queue.Queue()
 	frontier.put(node)
 	explored = []
-	x = 0
 
 	while True:
 		if frontier.empty():
@@ -145,20 +133,16 @@ def bfs(problem):
 		node = frontier.get()
 		explored.append(node.state)
 
-		print "Taking node %s from frontier" %node.state.name
-
 		node.state.visited = True
 		solution.path.append(node.state)
 		solution.explored_space += 1
 
 		for action in problem.actions(node.state):
-			print action.name
 			child = node.child_node(problem, action)
 
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
-				print "Adding child %s of node %s to frontier" %(child.state.name, node.state.name)
 				solution.path_cost += child.path_cost
 				if problem.goal_test(child.state):
 					solution.path.append(child.state)
@@ -168,43 +152,52 @@ def bfs(problem):
 					solution.frontier_space = frontier.qsize()
 
 '''unfinished - how to take an element out of a priority queue (not at the front)'''
-'''def unicost(problem):
+def unicost(problem):
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
 
 	frontier = Queue.PriorityQueue()
 	frontier.put(node)
-	frontier_set = [node.state]
+
+	solution.frontier_space += 1
+
 	explored = []
 
 	while True:
+
 		if frontier.empty():
-			return Solution()
+			return solution
 
 		node = frontier.get()
-		frontier_set.remove(node.state)
 
 		if problem.goal_test(node.state):
 			return solution
 
 		explored.append(node.state)
 
+		node.state.visited = True
+		solution.path.append(node.state)
+		solution.explored_space += 1
+
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
+				global frontier
 				frontier.put(child)
-				frontier_set.append(child.state)
-			elif child.state in frontier_set:
-				for node in frontier.queue:
-					if child.state is node.state and node.path_cost > child.path_cost:
-						# take node out of frontier priority queue
-						frontier.put(child)
-						frontier_set.append(child.state)
+				solution.path_cost += child.path_cost
+			elif child.stateInQueueWithHigherCost(frontier):
+				deletedNode = child.removeHigherNodeFromPQ(frontier)
+				frontier.put(child)
+				solution.path_cost -= deletedNode.path_cost
+				solution.path_cost += child.path_cost
 
-def iddfs(problem):
+			if frontier.qsize() > solution.frontier_space:
+				solution.frontier_space = frontier.qsize()
+
+'''def iddfs(problem):
 	for depth in xrange(sys.maxint):
 		solution = depth_limited_search(problem, depth)
 		if solution is not 'cutoff':
@@ -244,6 +237,29 @@ class Node:
 		child_state = problem.result(self.state, action)
 		path_cost = self.path_cost + problem.step_cost(self.state, action)
 		return Node(child_state, self, action, path_cost)
+
+	'''given a node and a priority queue
+	if the state of the node is in the pq with a higher cost return true
+	else return false'''
+	def stateInQueueWithHigherCost(self, pq):
+		for pq_node in pq.queue:
+			if self.state is pq_node.state:
+				if self.path_cost < pq_node.path_cost:
+					return True
+		return False
+
+	def removeHigherNodeFromPQ(self, pq):
+		temp = Queue.PriorityQueue()
+		while not pq.empty():
+			pq_node = pq.get()
+			if self.state is not pq_node.state:
+				temp.put(pq_node)
+			else:
+				deletedNode = pq_node
+		while not temp.empty():
+			pq.put(temp.get())
+
+		return deletedNode
 
 class Solution:
 	def __init__(self):

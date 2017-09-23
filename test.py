@@ -16,51 +16,39 @@ class AggState:
 		self.stop = stop
 
 def main():
-	filename = sys.argv[1]
-	search = sys.argv[2]
 
-	file = open(filename, 'r')
-
-	problem = file.readline()
-
-	readFile(file)
-
-	file.close()
-
-	me = Me("Bri", 22)
+	me = Me("Me", 22)
 	you = Me("You", 57)
 	we = Me("We", 2);
 	them = Me("Them", 37)
 	q = Queue.PriorityQueue()
-	l = [me, you, we]
 
 	q.put(me)
 	q.put(you)
 	q.put(we)
+	q.put(them)
 
-def readFile(file):
-	listOfStates = []
+	print "original priority queue: we, me, them, you"
+	for x in q.queue:
+		print x.name
 
-	stringOfStates = file.readline().strip().replace(",", " ").strip('[]')
-	listOfStateStrings = stringOfStates.split('  ')
-	print stringOfStates
+	remove(q)
 
-	for x in listOfStateStrings:
-		print x
+	print "changed priority queue: we, me"
+	for x in q.queue:
+		print x.name
 
-	for stateString in listOfStateStrings:
-		stateString = stateString.strip('()')
-		state = stateString.split(' ')
-		aggState = AggState(state[0].strip(""), int(state[1]), int(state[2]))
-		listOfStates.append(aggState)
+def remove(q):
+	temp = Queue.PriorityQueue()
 
-	write(listOfStates)
+	print "removing non-front element from queue..."
+	while not q.empty():
+		x = q.get()
+		if x.age < 30:
+			temp.put(x)
 
-def write(listOfStates):
-	for x in listOfStates:
-		print "Name %s" %x.name
-		print "Start %d" %x.start
-		print "Stop %d" %x.stop
+	while not temp.empty():
+		q.put(temp.get())
 
 if __name__ == "__main__":
 	main()
