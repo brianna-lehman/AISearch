@@ -116,6 +116,7 @@ def search(algo, problem):
 
 '''unfinished - will aways return None'''
 def bfs(problem):
+	#pdb.set_trace()
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
@@ -200,6 +201,8 @@ def unicost(problem):
 			elif child.stateInQueueWithHigherCost(frontier):
 				deletedNode = child.removeHigherNodeFromPQ(frontier)
 				frontier.put(child)
+				solution.path_cost -= problem.step_cost(deletedNode.parent.state, deletedNode.state)
+				solution.path_cost += problem.step_cost(child.parent.state, child.state)
 
 			if frontier.qsize() > solution.frontier_space:
 				solution.frontier_space = frontier.qsize()
@@ -219,9 +222,10 @@ def depth_limited_search(problem, limit):
 
 def recursive_dls(node, problem, solution, limit):
 	print "inside recursive dls %d" %limit
+	node.state.visited = True
 	if problem.goal_test(node):
 		print "At goal state"
-		return solution.setSolutionMetrics(node)
+		return solution
 	elif limit == 0:
 		print "At cutoff"
 		return 'cutoff'
@@ -230,6 +234,7 @@ def recursive_dls(node, problem, solution, limit):
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
 			solution.time += 1
+			solution.path_cost += problem.step_cost(child.parent.state, child.state)
 			result = recursive_dls(child, problem, solution, limit-1)
 			if result == 'cutoff':
 				atCutoff = True
@@ -389,12 +394,6 @@ class AggProblem:
 	# return false if at least one of the states hasn't been visited
 	# true otherwise
 	def goal_test(self, node):
-		curr = node
-
-		while curr is not None:
-			curr.state.visited = True
-			curr = curr.parent
-
 		for n in self.states:
 			if n.visited == False:
 				return False
