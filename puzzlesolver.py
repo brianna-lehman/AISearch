@@ -89,7 +89,7 @@ def aggregation(file, algo):
 
 def write(solution):
 	for x in solution.path:
-		print "Path %s" %x.name
+		print "Path %s" %x.state.name
 
 	print "Time %d" %solution.time
 	print "Frontier space %d" %solution.frontier_space
@@ -121,7 +121,7 @@ def bfs(problem):
 	solution.time += 1
 
 	if problem.goal_test(node):
-		return solution.setSolutionMetrics(node)
+		return solution
 
 	frontier = Queue.Queue()
 	frontier.put(node)
@@ -129,20 +129,25 @@ def bfs(problem):
 
 	while True:
 		if frontier.empty():
-			return solution.setSolutionMetrics(node)
+			return solution
 
+		# pdb.set_trace()
 		node = frontier.get()
 		explored.append(node.state)
+
+		node.state.visited = True
 		solution.explored_space += 1
+		solution.path.append(node)
+		if node.parent is not None:
+			solution.path_cost += problem.step_cost(node.parent.state, node.state)
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
-
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
 				if problem.goal_test(child):
-					return solution.setSolutionMetrics(child)
+					return solution
 				frontier.put(child)
 				if frontier.qsize() > solution.frontier_space:
 					solution.frontier_space = frontier.qsize()
@@ -205,7 +210,7 @@ def recursive_dls(node, problem, solution, limit):
 	print "inside recursive dls %d" %limit
 	if problem.goal_test(node):
 		print "At goal state"
-		return solution
+		return solution.setSolutionMetrics(node)
 	elif limit == 0:
 		print "At cutoff"
 		return 'cutoff'
@@ -392,6 +397,8 @@ class AggProblem:
 
 	# find the weight of the edge between these two states
 	def step_cost(self, stateA, stateB):
+		#pdb.set_trace()
+
 		if stateB in stateA.edges.keys():
 			return stateA.edges[stateB]
 		return 0
