@@ -120,8 +120,8 @@ def bfs(problem):
 	solution = Solution()
 	solution.time += 1
 
-	if problem.goal_test(node.state):
-		return solution
+	if problem.goal_test(node):
+		return solution.setSolutionMetrics(node)
 
 	frontier = Queue.Queue()
 	frontier.put(node)
@@ -129,12 +129,10 @@ def bfs(problem):
 
 	while True:
 		if frontier.empty():
-			return solution
+			return solution.setSolutionMetrics(node)
+
 		node = frontier.get()
 		explored.append(node.state)
-
-		node.state.visited = True
-		solution.path.append(node.state)
 		solution.explored_space += 1
 
 		for action in problem.actions(node.state):
@@ -143,10 +141,8 @@ def bfs(problem):
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
-				solution.path_cost += child.path_cost
-				if problem.goal_test(child.state):
-					solution.path.append(child.state)
-					return solution
+				if problem.goal_test(child):
+					return solution.setSolutionMetrics(child)
 				frontier.put(child)
 				if frontier.qsize() > solution.frontier_space:
 					solution.frontier_space = frontier.qsize()
@@ -167,17 +163,15 @@ def unicost(problem):
 	while True:
 
 		if frontier.empty():
-			return solution
+			return solution.setSolutionMetrics(None)
 
 		node = frontier.get()
 
-		if problem.goal_test(node.state):
-			return solution
+		if problem.goal_test(node):
+			return solution.setSolutionMetrics(node)
 
 		explored.append(node.state)
 
-		node.state.visited = True
-		solution.path.append(node.state)
 		solution.explored_space += 1
 
 		for action in problem.actions(node.state):
@@ -185,34 +179,50 @@ def unicost(problem):
 			solution.time += 1
 
 			if child.state not in explored and child not in frontier.queue:
-				global frontier
+				#global frontier
 				frontier.put(child)
-				solution.path_cost += child.path_cost
 			elif child.stateInQueueWithHigherCost(frontier):
 				deletedNode = child.removeHigherNodeFromPQ(frontier)
 				frontier.put(child)
-				solution.path_cost -= deletedNode.path_cost
-				solution.path_cost += child.path_cost
 
 			if frontier.qsize() > solution.frontier_space:
 				solution.frontier_space = frontier.qsize()
 
-'''def iddfs(problem):
+def iddfs(problem):
 	for depth in xrange(sys.maxint):
+		print "inside iddfs %d" %depth
 		solution = depth_limited_search(problem, depth)
-		if solution is not 'cutoff':
+		if solution != 'cutoff':
 			return solution
 
 def depth_limited_search(problem, limit):
-	return recursive_dls(Node(problem.initial_state), problem, Solution(), limit)
+	print "inside depth_limited_search %d" %limit
+	solution = Solution()
+	solution.time += 1
+	return recursive_dls(Node(problem.initial_state), problem, solution, limit)
 
 def recursive_dls(node, problem, solution, limit):
-	if problem.goal_test(node.state):
+	print "inside recursive dls %d" %limit
+	if problem.goal_test(node):
+		print "At goal state"
 		return solution
 	elif limit == 0:
+		print "At cutoff"
 		return 'cutoff'
 	else:
-		atCutoff = False'''
+		atCutoff = False
+		for action in problem.actions(node.state):
+			child = node.child_node(problem, action)
+			solution.time += 1
+			result = recursive_dls(child, problem, solution, limit-1)
+			if result == 'cutoff':
+				atCutoff = True
+			elif result is not None:
+				return result
+		if atCutoff == True:
+			return 'cutoff'
+		else:
+			return None
 
 
 ''' STANDARD CLASS DEFINITIONS '''
@@ -269,6 +279,20 @@ class Solution:
 		self.explored_space = 0 # largest number of nodes in explored
 		self.path_cost = 0 	# for monitor cost = P(sub t)
 						# for agg cost = sum of weights in the path to visit all nodes
+
+	def setSolutionMetrics(self, node):
+		solution_path = []
+
+		curr = node
+
+		while curr is not None:
+			self.path.append(curr.state)
+			curr = curr.parent
+
+		if node is not None:
+			self.path_cost = node.path_cost
+
+		return self
 
 ''' PROBLEM SPECIFIC CLASS DEFINITIONS '''
 
@@ -348,10 +372,17 @@ class AggProblem:
 
 	# return false if at least one of the states hasn't been visited
 	# true otherwise
-	def goal_test(self, state):
+	def goal_test(self, node):
+		curr = node
+
+		while curr is not None:
+			curr.state.visited = True
+			curr = curr.parent
+
 		for n in self.states:
 			if n.visited == False:
 				return False
+
 		return True
 
 	# currently uncalled
