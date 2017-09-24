@@ -89,7 +89,7 @@ def aggregation(file, algo):
 
 def write(solution):
 	for x in solution.path:
-		print "Path %s" %x.state.name
+		print "Path %s" %x.name
 
 	print "Time %d" %solution.time
 	print "Frontier space %d" %solution.frontier_space
@@ -129,6 +129,7 @@ def bfs(problem):
 
 	while True:
 		if frontier.empty():
+			solution.explored_space = len(explored)
 			return solution
 
 		# pdb.set_trace()
@@ -136,8 +137,7 @@ def bfs(problem):
 		explored.append(node.state)
 
 		node.state.visited = True
-		solution.explored_space += 1
-		solution.path.append(node)
+		solution.path.append(node.state)
 		if node.parent is not None:
 			solution.path_cost += problem.step_cost(node.parent.state, node.state)
 
@@ -147,6 +147,7 @@ def bfs(problem):
 
 			if child.state not in explored and child not in frontier.queue:
 				if problem.goal_test(child):
+					solution.explored_space = len(explored)
 					return solution
 				frontier.put(child)
 				if frontier.qsize() > solution.frontier_space:
@@ -157,6 +158,7 @@ def unicost(problem):
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
+	print "Number of nodes created %d" %solution.time
 
 	frontier = Queue.PriorityQueue()
 	frontier.put(node)
@@ -168,23 +170,32 @@ def unicost(problem):
 	while True:
 
 		if frontier.empty():
-			return solution.setSolutionMetrics(None)
+			solution.explored_space = len(explored)
+			return solution
 
 		node = frontier.get()
 
 		if problem.goal_test(node):
-			return solution.setSolutionMetrics(node)
+			solution.path.append(node.state)
+			solution.explored_space = len(explored)
+			return solution
 
 		explored.append(node.state)
 
-		solution.explored_space += 1
+		node.state.visited = True
+		solution.path.append(node.state)
+		if node.parent is not None:
+			print "Original solution path cost: %d" %solution.path_cost
+			print "Path cost between %s and %s: %d" %(node.parent.state.name, node.state.name, problem.step_cost(node.parent.state, node.state))
+			solution.path_cost += problem.step_cost(node.parent.state, node.state)
+			print "Adding path: %d" %solution.path_cost
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
 			solution.time += 1
+			print "Number of nodes created: %d" %solution.time
 
 			if child.state not in explored and child not in frontier.queue:
-				#global frontier
 				frontier.put(child)
 			elif child.stateInQueueWithHigherCost(frontier):
 				deletedNode = child.removeHigherNodeFromPQ(frontier)
