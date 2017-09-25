@@ -396,14 +396,23 @@ class MonitorProblem():
 
 		return goal
 
-	def path_cost(self, stateA, stateB):
-		pass
+
+	def path_cost(self, current_path_cost, node):
+		return current_path_cost + self.step_cost(node.parent.state, node.state)
 
 	def remove_path_cost(self, current_path_cost, node):
-		pass
+		return current_path_cost - self.step_cost(node.parent.state, node.state)
 
+	''' if stateA is a target
+	check that stateB is monitoring the target
+	and return stateB's power '''
 	def step_cost(self, sensor, target):
-		pass
+		if sensor.power == -1:
+			for sensor in stateA.attached_edges:
+				if sensor is stateB:
+					return sensor.power
+		else:
+			return stateA.power
 
 ''' AGGREGATION PROBLEM '''
 class AggState(State):
@@ -449,7 +458,7 @@ class AggProblem:
 	def path_cost(self, current_path_cost, node):
 		return current_path_cost + self.step_cost(node.parent.state, node.state)
 
-	def remove_path_cost(self, current_path_cost, node):
+	def remove_path_cost(self, current_path_cost, nodeA):
 		return current_path_cost - self.step_cost(node.parent.state, node.state)
 
 	# find the weight of the edge between these two states
