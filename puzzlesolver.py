@@ -55,6 +55,8 @@ def monitor(file, algo):
 
 		solution = search(algo, MonitorProblem(allStates, MonitorState("root"), 0))
 
+		write(solution)
+
 '''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
 	listOfStates = []
