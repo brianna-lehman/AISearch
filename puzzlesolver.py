@@ -55,7 +55,7 @@ def monitor(file, algo):
 
 		solution = search(algo, MonitorProblem(allStates, MonitorState("root"), 0))
 
-		write(solution)
+		write("monitor_"+algo+"_output", solution)
 
 '''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
@@ -98,16 +98,26 @@ def aggregation(file, algo):
 
 	# print fields from solution to screen
 	# write fields to file
-	write(solution)
+	write("aggregate_"+algo+"_output", solution)
 
-def write(solution):
+def write(filename, solution):
+	output_file = open(filename+".txt", "w+")
+
 	for x in solution.path:
 		print "Path %s" %x.name
+		output_file.write("Path %s\n" %x.name)
 
 	print "Time %d" %solution.time
 	print "Frontier space %d" %solution.frontier_space
 	print "Explored space %d" %solution.explored_space
 	print "Path cost %d" %solution.pathCost
+
+	output_file.write("Time %d\n" %solution.time)
+	output_file.write("Frontier space %d\n" %solution.frontier_space)
+	output_file.write("Explored space %d\n" %solution.explored_space)
+	output_file.write("Path cost %d\n" %solution.pathCost)
+
+	output_file.close()
 
 '''running the appropriate algorithm and returning the Solution object'''
 def search(algo, problem):
