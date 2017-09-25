@@ -1,5 +1,6 @@
 import Queue
 import sys
+import pdb
 
 class Me:
 	def __init__(self, name, age):
@@ -16,39 +17,50 @@ class AggState:
 		self.stop = stop
 
 def main():
+	file = open(sys.argv[1])
+	file.readline()
+	monitor(file)
 
-	me = Me("Me", 22)
-	you = Me("You", 57)
-	we = Me("We", 2);
-	them = Me("Them", 37)
-	q = Queue.PriorityQueue()
+def monitor(file):
+	# pdb.set_trace()
+	listOfSensors = []
+	listOfTargets = []
 
-	q.put(me)
-	q.put(you)
-	q.put(we)
-	q.put(them)
+	stringOfSensors = file.readline().strip().replace(',', ' ').strip('[]')
+	listOfSensorStrings = stringOfSensors.split('  ')
 
-	print "original priority queue: we, me, them, you"
-	for x in q.queue:
-		print x.name
+	for sensorString in listOfSensorStrings:
+		sensorString = sensorString.strip('()')
+		sensor_list = sensorString.split(' ')
+		for x in sensor_list: print x
+		listOfSensors.append(sensor_list[0])
 
-	remove(q)
+	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
+	listOfTargetStrings = stringOfTargets.split('  ')
 
-	print "changed priority queue: we, me"
-	for x in q.queue:
-		print x.name
+	if len(listOfTargetStrings) > len(listOfSensors):
+		print len(listOfTargetStrings) > len(listOfSensors)
+		sys.exit()
+	else:
+		for targetString in listOfTargetStrings:
+			targetString = targetString.strip('()')
+			target_list = targetString.split(' ')
+			for x in target_list: print x
+			listOfTargets.append(target_list[0])
 
-def remove(q):
-	temp = Queue.PriorityQueue()
+		for sensor in listOfSensors:
+			for target in listOfTargets:
+				print "Target %s is reachable from sensor %s" %(target, sensor)
 
-	print "removing non-front element from queue..."
-	while not q.empty():
-		x = q.get()
-		if x.age < 30:
-			temp.put(x)
+		for target in listOfTargets:
+			for sensor in listOfSensors:
+				print "Sensor %s is reachable from target %s" %(sensor, target)
 
-	while not temp.empty():
-		q.put(temp.get())
+		allStates = listOfSensors + listOfTargets
+
+		print "Number of sensors + targets: %d" %len(allStates)
+		print "All possible states: "
+		for x in allStates: print x
 
 if __name__ == "__main__":
 	main()

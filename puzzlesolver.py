@@ -17,8 +17,9 @@ def main():
 	elif problem == "aggregation":
 		aggregation(file, search_algo)
 
-'''def monitor(file, algo):
+def monitor(file, algo):
 	listOfSensors = []
+	listOfTargets = []
 
 	stringOfSensors = file.readline().strip().replace(',', ' ').strip('[]')
 	listOfSensorStrings = stringOfSensors.split('  ')
@@ -26,7 +27,7 @@ def main():
 	for sensorString in listOfSensorStrings:
 		sensorString = sensorString.strip('()')
 		sensor_list = sensorString.split(' ')
-		sensorState = SensorState(sensor_list[0].strip(""), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
+		sensorState = MonitorState(sensor_list[0].strip(""), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
 		listOfSensors.append(sensorState)
 
 	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
@@ -39,10 +40,20 @@ def main():
 		for targetString in listOfTargetStrings:
 			targetString = targetString.strip('()')
 			target_list = targetString.split(' ')
-			targetState = TargetState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]))
+			targetState = TargetState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]), -1)
+			listOfTargets.append(targetState)
 
+		for sensor in listOfSensors:
+			for target in listOfTargets:
+				sensor.addAdjacentState(target)
+
+		for target in listOfTargets:
 			for sensor in listOfSensors:
-				sensor.addAdjacentState(targetState)'''
+				target.addAdjacentState(sensor)
+
+		allStates = listOfSensors + listOfTargets
+
+		solution = search(algo, MonitorProblem(allStates, Node(), 0))
 
 '''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
@@ -135,12 +146,16 @@ def bfs(problem):
 
 		# pdb.set_trace()
 		node = frontier.get()
+
+		if node.state.name == "root":
+			continue
+
 		explored.append(node.state)
 
 		node.state.visited = True
 		solution.path.append(node.state)
 		if node.parent is not None:
-			solution.path_cost += problem.step_cost(node.parent.state, node.state)
+			solution.path_cost = problem.path_cost(solution.path_cost, node)
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
@@ -188,7 +203,7 @@ def unicost(problem):
 		if node.parent is not None:
 			print "Original solution path cost: %d" %solution.path_cost
 			print "Path cost between %s and %s: %d" %(node.parent.state.name, node.state.name, problem.step_cost(node.parent.state, node.state))
-			solution.path_cost += problem.step_cost(node.parent.state, node.state)
+			solution.path_cost = problem.path_cost(solution.path_cost, node)
 			print "Adding path: %d" %solution.path_cost
 
 		for action in problem.actions(node.state):
@@ -201,8 +216,8 @@ def unicost(problem):
 			elif child.stateInQueueWithHigherCost(frontier):
 				deletedNode = child.removeHigherNodeFromPQ(frontier)
 				frontier.put(child)
-				solution.path_cost -= problem.step_cost(deletedNode.parent.state, deletedNode.state)
-				solution.path_cost += problem.step_cost(child.parent.state, child.state)
+				solution.path_cost = problem.remove_path_cost(solution.path_cost, deletedNode)
+				solution.path_cost = problem.path_cost(solution.path_cost, child)
 
 			if frontier.qsize() > solution.frontier_space:
 				solution.frontier_space = frontier.qsize()
@@ -234,7 +249,7 @@ def recursive_dls(node, problem, solution, limit):
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
 			solution.time += 1
-			solution.path_cost += problem.step_cost(child.parent.state, child.state)
+			solution.path_cost = problem.path_cost(solution.path_cost, child)
 			result = recursive_dls(child, problem, solution, limit-1)
 			if result == 'cutoff':
 				atCutoff = True
@@ -301,6 +316,7 @@ class Solution:
 		self.path_cost = 0 	# for monitor cost = P(sub t)
 						# for agg cost = sum of weights in the path to visit all nodes
 
+	''' this is never called '''
 	def setSolutionMetrics(self, node):
 		solution_path = []
 
@@ -318,19 +334,17 @@ class Solution:
 ''' PROBLEM SPECIFIC CLASS DEFINITIONS '''
 
 ''' MONITOR PROBLEM '''
-class SensorState(State):
-	def __init__(self, name, start, stop, power=0, edges=[]):
+class MonitorState(State):
+	def __init__(self, name="root", start=0, stop=0, power=0, possible_edges=[], attached_edges = [], visited=False):
 		State.__init__(self, name, start, stop)
 		self.power = power
-		self.edges = edges
+		self.possible_edges = possible_edges
+		self.attached_edges = attached_edges
+		self.visited = visited
 
 	def addAdjacentState(self, target):
 		self.edges.update(target)
 
-class TargetState(State):
-	def __init__(self, name, start, stop, visited=False):
-		State.__init__(self, name, start, stop)
-		self.visited = visited
 
 class MonitorProblem():
 	def __init__(self, states, initial_state, path_cost=0):
@@ -340,7 +354,12 @@ class MonitorProblem():
 
 	''' given the state, what states can this state go to? '''
 	def actions(self, state):
-		pass
+		children = []
+
+		for child in state.edges:
+			children.append(child)
+
+		return child
 
 	''' a state attaches itself to a new state
 		if the original state is a sensor:
@@ -348,12 +367,39 @@ class MonitorProblem():
 		if the original state is a target:
 			action.power = action.power - euclideanDistance between sensor(action) and target(state)'''
 	def result(self, state, action):
-		pass
+		if state.power != -1:
+			state.power -= euclideanDistance(state, action)
+		else:
+			action.power -= euclideanDistance(action, state)
 
-	def goal_test(self, state):
-		pass
+		action.attached_edges.append(state)
+		state.attached_edges.append(action)
+		return action
+
+		def euclideanDistance(sensor, target):
+			a = sensor.start
+			b = sensor.stop
+			x = target.start
+			y = target.stop
+
+			return sqrt((a-x)**2 + (b-y)**2)
+
+	''' given a node, if the node is a sensor
+	    return true if all the targets that this sensor can visit
+	    are being monitored'''
+	def goal_test(self, node):
+		goal = True
+		if node.power != -1:
+			for target in node.state.possible_edges:
+				if target.visited == False:
+					goal = False
+
+		return goal
 
 	def path_cost(self, stateA, stateB):
+		pass
+
+	def remove_path_cost(self, current_path_cost, node):
 		pass
 
 	def step_cost(self, sensor, target):
@@ -400,10 +446,11 @@ class AggProblem:
 
 		return True
 
-	# currently uncalled
-	def path_cost(self, stateA, stateB):
-		if stateB in edge.keys():
-			self.path_cost += edge[stateB]
+	def path_cost(self, current_path_cost, node):
+		return current_path_cost + self.step_cost(node.parent.state, node.state)
+
+	def remove_path_cost(self, current_path_cost, node):
+		return current_path_cost - self.step_cost(node.parent.state, node.state)
 
 	# find the weight of the edge between these two states
 	def step_cost(self, stateA, stateB):
