@@ -40,7 +40,7 @@ def monitor(file, algo):
 		for targetString in listOfTargetStrings:
 			targetString = targetString.strip('()')
 			target_list = targetString.split(' ')
-			targetState = TargetState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]), -1)
+			targetState = MonitorState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]), -1)
 			listOfTargets.append(targetState)
 
 		for sensor in listOfSensors:
@@ -53,7 +53,7 @@ def monitor(file, algo):
 
 		allStates = listOfSensors + listOfTargets
 
-		solution = search(algo, MonitorProblem(allStates, Node(), 0))
+		solution = search(algo, MonitorProblem(allStates, MonitorState("root"), 0))
 
 '''unfinished - processing the file and running the search to find the solution'''
 def aggregation(file, algo):
@@ -105,7 +105,7 @@ def write(solution):
 	print "Time %d" %solution.time
 	print "Frontier space %d" %solution.frontier_space
 	print "Explored space %d" %solution.explored_space
-	print "Path cost %d" %solution.path_cost
+	print "Path cost %d" %solution.pathCost
 
 '''running the appropriate algorithm and returning the Solution object'''
 def search(algo, problem):
@@ -127,12 +127,14 @@ def search(algo, problem):
 
 '''unfinished - will aways return None'''
 def bfs(problem):
-	#pdb.set_trace()
+	# pdb.set_trace()
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
 
-	if problem.goal_test(node):
+	if node.state.name == "root":
+		pass
+	elif problem.goal_test(node):
 		return solution
 
 	frontier = Queue.Queue()
@@ -155,7 +157,7 @@ def bfs(problem):
 		node.state.visited = True
 		solution.path.append(node.state)
 		if node.parent is not None:
-			solution.path_cost = problem.path_cost(solution.path_cost, node)
+			solution.pathCost = problem.path_cost(solution.pathCost, node)
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
@@ -201,10 +203,10 @@ def unicost(problem):
 		node.state.visited = True
 		solution.path.append(node.state)
 		if node.parent is not None:
-			print "Original solution path cost: %d" %solution.path_cost
+			print "Original solution path cost: %d" %solution.pathCost
 			print "Path cost between %s and %s: %d" %(node.parent.state.name, node.state.name, problem.step_cost(node.parent.state, node.state))
-			solution.path_cost = problem.path_cost(solution.path_cost, node)
-			print "Adding path: %d" %solution.path_cost
+			solution.pathCost = problem.path_cost(solution.pathCost, node)
+			print "Adding path: %d" %solution.pathCost
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
@@ -216,8 +218,8 @@ def unicost(problem):
 			elif child.stateInQueueWithHigherCost(frontier):
 				deletedNode = child.removeHigherNodeFromPQ(frontier)
 				frontier.put(child)
-				solution.path_cost = problem.remove_path_cost(solution.path_cost, deletedNode)
-				solution.path_cost = problem.path_cost(solution.path_cost, child)
+				solution.pathCost = problem.remove_path_cost(solution.pathCost, deletedNode)
+				solution.pathCost = problem.path_cost(solution.pathCost, child)
 
 			if frontier.qsize() > solution.frontier_space:
 				solution.frontier_space = frontier.qsize()
@@ -249,7 +251,7 @@ def recursive_dls(node, problem, solution, limit):
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
 			solution.time += 1
-			solution.path_cost = problem.path_cost(solution.path_cost, child)
+			solution.pathCost = problem.path_cost(solution.pathCost, child)
 			result = recursive_dls(child, problem, solution, limit-1)
 			if result == 'cutoff':
 				atCutoff = True
@@ -270,19 +272,19 @@ class State:
 		self.stop = stop
 
 class Node:
-	def __init__(self, state, parent=None, action=None, path_cost=0):
+	def __init__(self, state, parent=None, action=None, pathCost=0):
 		self.state = state
 		self.parent = parent
 		self.action = action
-		self.path_cost = path_cost
+		self.pathCost = pathCost
 
 	def __cmp__(self, other):
-		return cmp(self.path_cost, other.path_cost)
+		return cmp(self.pathCost, other.pathCost)
 
 	def child_node(self, problem, action):
 		child_state = problem.result(self.state, action)
-		path_cost = self.path_cost + problem.step_cost(self.state, action)
-		return Node(child_state, self, action, path_cost)
+		pathCost = self.pathCost + problem.step_cost(self.state, action)
+		return Node(child_state, self, action, pathCost)
 
 	'''given a node and a priority queue
 	if the state of the node is in the pq with a higher cost return true
@@ -290,7 +292,7 @@ class Node:
 	def stateInQueueWithHigherCost(self, pq):
 		for pq_node in pq.queue:
 			if self.state is pq_node.state:
-				if self.path_cost < pq_node.path_cost:
+				if self.pathCost < pq_node.pathCost:
 					return True
 		return False
 
@@ -313,7 +315,7 @@ class Solution:
 		self.time = 0 # total number of nodes created
 		self.frontier_space = 0 # largest number of nodes in frontier
 		self.explored_space = 0 # largest number of nodes in explored
-		self.path_cost = 0 	# for monitor cost = P(sub t)
+		self.pathCost = 0 	# for monitor cost = P(sub t)
 						# for agg cost = sum of weights in the path to visit all nodes
 
 	''' this is never called '''
@@ -327,7 +329,7 @@ class Solution:
 			curr = curr.parent
 
 		if node is not None:
-			self.path_cost = node.path_cost
+			self.pathCost = node.pathCost
 
 		return self
 
@@ -343,23 +345,23 @@ class MonitorState(State):
 		self.visited = visited
 
 	def addAdjacentState(self, target):
-		self.edges.update(target)
+		self.possible_edges.append(target)
 
 
 class MonitorProblem():
-	def __init__(self, states, initial_state, path_cost=0):
+	def __init__(self, states, initial_state, pathCost=0):
 		self.states = states
 		self.initial_state = initial_state
-		self.path_cost = path_cost
+		self.pathCost = pathCost
 
 	''' given the state, what states can this state go to? '''
 	def actions(self, state):
 		children = []
 
-		for child in state.edges:
+		for child in state.possible_edges:
 			children.append(child)
 
-		return child
+		return children
 
 	''' a state attaches itself to a new state
 		if the original state is a sensor:
@@ -367,6 +369,14 @@ class MonitorProblem():
 		if the original state is a target:
 			action.power = action.power - euclideanDistance between sensor(action) and target(state)'''
 	def result(self, state, action):
+		def euclideanDistance(sensor, target):
+			a = sensor.start
+			b = sensor.stop
+			x = target.start
+			y = target.stop
+
+			return sqrt((a-x)**2 + (b-y)**2)
+
 		if state.power != -1:
 			state.power -= euclideanDistance(state, action)
 		else:
@@ -376,26 +386,18 @@ class MonitorProblem():
 		state.attached_edges.append(action)
 		return action
 
-		def euclideanDistance(sensor, target):
-			a = sensor.start
-			b = sensor.stop
-			x = target.start
-			y = target.stop
-
-			return sqrt((a-x)**2 + (b-y)**2)
-
 	''' given a node, if the node is a sensor
 	    return true if all the targets that this sensor can visit
 	    are being monitored'''
 	def goal_test(self, node):
+		# pdb.set_trace()
 		goal = True
-		if node.power != -1:
+		if node.state.power != -1:
 			for target in node.state.possible_edges:
 				if target.visited == False:
 					goal = False
 
 		return goal
-
 
 	def path_cost(self, current_path_cost, node):
 		return current_path_cost + self.step_cost(node.parent.state, node.state)
@@ -406,8 +408,8 @@ class MonitorProblem():
 	''' if stateA is a target
 	check that stateB is monitoring the target
 	and return stateB's power '''
-	def step_cost(self, sensor, target):
-		if sensor.power == -1:
+	def step_cost(self, stateA, stateB):
+		if stateA.power == -1:
 			for sensor in stateA.attached_edges:
 				if sensor is stateB:
 					return sensor.power
@@ -426,10 +428,10 @@ class AggState(State):
 		self.edges.update({state: weight})
 
 class AggProblem:
-	def __init__(self, states, initial_state, path_cost=0):
+	def __init__(self, states, initial_state, pathCost=0):
 		self.states = states # a list of all the states
 		self.initial_state = initial_state # starting node for traversing the graph
-		self.path_cost = path_cost
+		self.pathCost = pathCost
 
 	# given a state, return a list of all the states attached to it
 	def actions(self, state):
