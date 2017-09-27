@@ -188,7 +188,7 @@ def unicost(problem):
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
 	solution.time += 1
-	print "Number of nodes created %d" %solution.time
+	# print "Number of nodes created %d" %solution.time
 
 	frontier = Queue.PriorityQueue()
 	frontier.put(node)
@@ -215,15 +215,15 @@ def unicost(problem):
 		node.state.visited = True
 		solution.path.append(node.state)
 		if node.parent is not None:
-			print "Original solution path cost: %d" %solution.pathCost
-			print "Path cost between %s and %s: %d" %(node.parent.state.name, node.state.name, problem.step_cost(node.parent.state, node.state))
+			# print "Original solution path cost: %d" %solution.pathCost
+			# print "Path cost between %s and %s: %d" %(node.parent.state.name, node.state.name, problem.step_cost(node.parent.state, node.state))
 			solution.pathCost = problem.path_cost(solution.pathCost, node)
-			print "Adding path: %d" %solution.pathCost
+			# print "Adding path: %d" %solution.pathCost
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
 			solution.time += 1
-			print "Number of nodes created: %d" %solution.time
+			# print "Number of nodes created: %d" %solution.time
 
 			if child.state not in explored and child not in frontier.queue:
 				frontier.put(child)
@@ -238,25 +238,25 @@ def unicost(problem):
 
 def iddfs(problem):
 	for depth in xrange(sys.maxint):
-		print "inside iddfs %d" %depth
+		# print "inside iddfs %d" %depth
 		solution = depth_limited_search(problem, depth)
 		if solution != 'cutoff':
 			return solution
 
 def depth_limited_search(problem, limit):
-	print "inside depth_limited_search %d" %limit
+	# print "inside depth_limited_search %d" %limit
 	solution = Solution()
 	solution.time += 1
 	return recursive_dls(Node(problem.initial_state), problem, solution, limit)
 
 def recursive_dls(node, problem, solution, limit):
-	print "inside recursive dls %d" %limit
+	# print "inside recursive dls %d" %limit
 	node.state.visited = True
 	if problem.goal_test(node):
-		print "At goal state"
+		# print "At goal state"
 		return solution
 	elif limit == 0:
-		print "At cutoff"
+		# print "At cutoff"
 		return 'cutoff'
 	else:
 		atCutoff = False
