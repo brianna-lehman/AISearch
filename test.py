@@ -1,6 +1,7 @@
 import Queue
 import sys
 import pdb
+import re
 
 class Me:
 	def __init__(self, name, age):
@@ -17,50 +18,11 @@ class AggState:
 		self.stop = stop
 
 def main():
-	file = open(sys.argv[1])
-	file.readline()
-	monitor(file)
-
-def monitor(file):
-	# pdb.set_trace()
-	listOfSensors = []
-	listOfTargets = []
-
-	stringOfSensors = file.readline().strip().replace(',', ' ').strip('[]')
-	listOfSensorStrings = stringOfSensors.split('  ')
-
-	for sensorString in listOfSensorStrings:
-		sensorString = sensorString.strip('()')
-		sensor_list = sensorString.split(' ')
-		for x in sensor_list: print x
-		listOfSensors.append(sensor_list[0])
-
-	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
-	listOfTargetStrings = stringOfTargets.split('  ')
-
-	if len(listOfTargetStrings) > len(listOfSensors):
-		print len(listOfTargetStrings) > len(listOfSensors)
-		sys.exit()
-	else:
-		for targetString in listOfTargetStrings:
-			targetString = targetString.strip('()')
-			target_list = targetString.split(' ')
-			for x in target_list: print x
-			listOfTargets.append(target_list[0])
-
-		for sensor in listOfSensors:
-			for target in listOfTargets:
-				print "Target %s is reachable from sensor %s" %(target, sensor)
-
-		for target in listOfTargets:
-			for sensor in listOfSensors:
-				print "Sensor %s is reachable from target %s" %(sensor, target)
-
-		allStates = listOfSensors + listOfTargets
-
-		print "Number of sensors + targets: %d" %len(allStates)
-		print "All possible states: "
-		for x in allStates: print x
+	s = "[('S_1',1,1,350),('S_2',2,3,300),('S_3',1,5,280),('S_4',1,4,250),('S_5',4,0,250),('S_6',5,0,240),('S_7',9,3,220)]"
+	print type(s)
+	s = s.strip('[]')
+	print s
+	print re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', s)
 
 if __name__ == "__main__":
 	main()

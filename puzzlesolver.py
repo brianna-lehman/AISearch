@@ -2,6 +2,7 @@ import sys
 import Queue
 import pdb
 import time
+import re
 from math import sqrt
 
 ''' PROCESSING FILES '''
@@ -21,17 +22,17 @@ def monitor(file, algo):
 	listOfSensors = []
 	listOfTargets = []
 
-	stringOfSensors = file.readline().strip().replace(',', ' ').strip('[]')
-	listOfSensorStrings = stringOfSensors.split('  ')
+	stringOfSensors = file.readline().strip().strip('[]')
+	listOfSensorStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfSensors)
 
 	for sensorString in listOfSensorStrings:
 		sensorString = sensorString.strip('()')
-		sensor_list = sensorString.split(' ')
-		sensorState = MonitorState(sensor_list[0].strip(""), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
+		sensor_list = sensorString.split(',')
+		sensorState = MonitorState(sensor_list[0].strip('""'), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
 		listOfSensors.append(sensorState)
 
-	stringOfTargets = file.readline().strip().replace(',', ' ').strip('[]')
-	listOfTargetStrings = stringOfTargets.split('  ')
+	stringOfTargets = file.readline().strip().strip('[]')
+	listOfTargetStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfTargets)
 
 	if len(listOfTargetStrings) > len(listOfSensors):
 		write(Solution()) # prints the data from the Solution object to the screen and to a file
@@ -39,8 +40,8 @@ def monitor(file, algo):
 	else:
 		for targetString in listOfTargetStrings:
 			targetString = targetString.strip('()')
-			target_list = targetString.split(' ')
-			targetState = MonitorState(target_list[0].strip(""), int(target_list[1]), int(sensor_list[2]), -1)
+			target_list = targetString.split(',')
+			targetState = MonitorState(target_list[0].strip('""'), int(target_list[1]), int(sensor_list[2]), -1)
 			listOfTargets.append(targetState)
 
 		for sensor in listOfSensors:
@@ -61,26 +62,26 @@ def monitor(file, algo):
 def aggregation(file, algo):
 	listOfStates = []
 
-	stringOfStates = file.readline().strip()
-	stringOfStates = stringOfStates.replace(',', ' ')
-	stringOfStates = stringOfStates.strip('[]')
-	listOfStateStrings = stringOfStates.split('  ')
+	stringOfStates = file.readline().strip().strip('[]')
+	listOfStateStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfStates)
 
+	# pdb.set_trace()
 	for stateString in listOfStateStrings:
-		print stateString
-		stateString = stateString.strip('()')
-		state = stateString.split(' ')
+		stateString = stateString.strip(" ").strip('()')
+		state = stateString.split(',')
+		print state
 		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]))
 		listOfStates.append(aggState)
 
 	for line in file:
-		print line
 		state_A = None
 		state_B = None
 
-		edge = line.strip().strip('()').replace(',', ' ').split(" ")
+		edge = line.strip().strip(" ").strip('()').split(",")
 		stateA_name = edge[0].replace('"', '')
+		print stateA_name
 		stateB_name = edge[1].replace('"', '')
+		print stateB_name
 		weight = int(edge[2])
 		for s in listOfStates:
 			if s.name == stateA_name:
@@ -97,6 +98,11 @@ def aggregation(file, algo):
 
 	problem = AggProblem(listOfStates, listOfStates[0], 0)
 	solution = search(algo, problem)
+
+	'''for state in listOfStates:
+		print "\tState %s has children: " %state.name
+		for child, weight in state.edges.items():
+			print "\t\tChild %s, edge weight %d" %(child.name, weight)'''
 
 	# print fields from solution to screen
 	# write fields to file
@@ -185,8 +191,9 @@ def bfs(problem):
 					solution.explored_space = len(explored)
 					return solution
 				frontier.put(child)
-				if frontier.qsize() > solution.frontier_space:
-					solution.frontier_space = frontier.qsize()
+			# pdb.set_trace()
+			if frontier.qsize() > solution.frontier_space:
+				solution.frontier_space = frontier.qsize()
 
 '''unfinished - how to take an element out of a priority queue (not at the front)'''
 def unicost(problem):
@@ -227,13 +234,17 @@ def unicost(problem):
 
 		for action in problem.actions(node.state):
 			child = node.child_node(problem, action)
+			print "child %s of parent %s has a path cost of %d" %(child.state.name, child.parent.state.name, child.pathCost)
 			solution.time += 1
 			# print "Number of nodes created: %d" %solution.time
 
+			# pdb.set_trace()
 			if child.state not in explored and child not in frontier.queue:
+				print "Putting child %s of node %s in frontier" %(child.state.name, node.state.name)
 				frontier.put(child)
 			elif child.stateInQueueWithHigherCost(frontier):
 				deletedNode = child.removeHigherNodeFromPQ(frontier)
+				print "%s with weight %d is replaced by %s with weight %d" %(deletedNode.state.name, deletedNode.pathCost, child.state.name, child.pathCost)
 				frontier.put(child)
 				solution.pathCost = problem.remove_path_cost(solution.pathCost, deletedNode)
 				solution.pathCost = problem.path_cost(solution.pathCost, child)
@@ -310,13 +321,17 @@ class Node:
 	if the state of the node is in the pq with a higher cost return true
 	else return false'''
 	def stateInQueueWithHigherCost(self, pq):
+		# pdb.set_trace()
 		for pq_node in pq.queue:
 			if self.state is pq_node.state:
 				if self.pathCost < pq_node.pathCost:
 					return True
 		return False
 
+	'''take out all the elements currently in the queue and put them all back
+	except for the one that needs removed'''
 	def removeHigherNodeFromPQ(self, pq):
+		# pdb.set_trace()
 		temp = Queue.PriorityQueue()
 		while not pq.empty():
 			pq_node = pq.get()
@@ -446,6 +461,10 @@ class AggState(State):
 	def addAdjacentState(self, state, weight):
 		# add a new node to the list of nodes connected to this object
 		self.edges.update({state: weight})
+		print len(self.edges)
+		print "States attached to %s" %self.name
+		for state, weight in self.edges.items():
+			print "\t%s %d" %(state.name, weight)
 
 class AggProblem:
 	def __init__(self, states, initial_state, pathCost=0):
