@@ -12,9 +12,9 @@ def main():
 	file = open(problem_filename, 'r')
 	problem = file.readline().rstrip()
 
-	if problem == "monitor":
+	if problem == "monitor" or problem == "Monitor":
 		monitor(file, search_algo)
-	elif problem == "aggregation":
+	elif problem == "aggregation" or problem == "Aggregation":
 		aggregation(file, search_algo)
 
 def monitor(file, algo):
@@ -67,16 +67,18 @@ def aggregation(file, algo):
 	listOfStateStrings = stringOfStates.split('  ')
 
 	for stateString in listOfStateStrings:
+		print stateString
 		stateString = stateString.strip('()')
 		state = stateString.split(' ')
 		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]))
 		listOfStates.append(aggState)
 
 	for line in file:
+		print line
 		state_A = None
 		state_B = None
 
-		edge = line.strip().strip('()').replace(',', ' ').split("  ")
+		edge = line.strip().strip('()').replace(',', ' ').split(" ")
 		stateA_name = edge[0].replace('"', '')
 		stateB_name = edge[1].replace('"', '')
 		weight = int(edge[2])
@@ -139,6 +141,7 @@ def search(algo, problem):
 
 '''unfinished - will aways return None'''
 def bfs(problem):
+	print "Inside bfs"
 	# pdb.set_trace()
 	node = Node(problem.initial_state, None, None, 0)
 	solution = Solution()
@@ -154,6 +157,7 @@ def bfs(problem):
 	explored = []
 
 	while True:
+		print "\tChecking nodes in queue"
 		if frontier.empty():
 			solution.explored_space = len(explored)
 			return solution
@@ -172,6 +176,7 @@ def bfs(problem):
 			solution.pathCost = problem.path_cost(solution.pathCost, node)
 
 		for action in problem.actions(node.state):
+			print "\t\tCreating child %s from node %s" %(action.name, node.state.name)
 			child = node.child_node(problem, action)
 			solution.time += 1
 
@@ -273,6 +278,9 @@ def recursive_dls(node, problem, solution, limit):
 			return 'cutoff'
 		else:
 			return None
+
+def greedy(problem):
+	pass
 
 
 ''' STANDARD CLASS DEFINITIONS '''
