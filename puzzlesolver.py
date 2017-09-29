@@ -35,7 +35,8 @@ def monitor(file, algo):
 	listOfTargetStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfTargets)
 
 	if len(listOfTargetStrings) > len(listOfSensors):
-		write(Solution()) # prints the data from the Solution object to the screen and to a file
+		print("No solution")
+		write(Solution())
 		sys.exit()
 	else:
 		for targetString in listOfTargetStrings:
@@ -46,11 +47,11 @@ def monitor(file, algo):
 
 		for sensor in listOfSensors:
 			for target in listOfTargets:
-				sensor.addAdjacentState(target)
+				sensor.possible_edges[target] = euclideanDistance(sensor, target)
 
 		for target in listOfTargets:
 			for sensor in listOfSensors:
-				target.addAdjacentState(sensor)
+				target.possible_edges[sensor] = euclideanDistance(sensor, target)
 
 		allStates = listOfSensors + listOfTargets
 
@@ -127,6 +128,14 @@ def write(filename, solution):
 
 	output_file.close()
 
+def euclideanDistance(sensor, target):
+	a = sensor.start
+	b = sensor.stop
+	x = target.start
+	y = target.stop
+
+	return sqrt((a-x)**2 + (b-y)**2)
+
 '''running the appropriate algorithm and returning the Solution object'''
 def search(algo, problem):
 	if algo == "bfs":
@@ -141,7 +150,6 @@ def search(algo, problem):
 		return astar()
 	else:
 		return None
-
 
 ''' SEARCHING ALGORITHMS '''
 
@@ -293,7 +301,6 @@ def recursive_dls(node, problem, solution, limit):
 def greedy(problem):
 	pass
 
-
 ''' STANDARD CLASS DEFINITIONS '''
 
 class State:
@@ -372,16 +379,15 @@ class Solution:
 
 ''' MONITOR PROBLEM '''
 class MonitorState(State):
-	def __init__(self, name="root", start=0, stop=0, power=0, possible_edges=[], attached_edges = [], visited=False):
+	def __init__(self, name="root", start=0, stop=0, power=0, possible_edges={}, attached_edges={}, visited=False):
 		State.__init__(self, name, start, stop)
 		self.power = power
 		self.possible_edges = possible_edges
 		self.attached_edges = attached_edges
 		self.visited = visited
 
-	def addAdjacentState(self, target):
-		self.possible_edges.append(target)
-
+	def addAdjacentState(self, target, distance):
+		self.possible_edges[target] = distance
 
 class MonitorProblem():
 	def __init__(self, states, initial_state, pathCost=0):
@@ -404,21 +410,14 @@ class MonitorProblem():
 		if the original state is a target:
 			action.power = action.power - euclideanDistance between sensor(action) and target(state)'''
 	def result(self, state, action):
-		def euclideanDistance(sensor, target):
-			a = sensor.start
-			b = sensor.stop
-			x = target.start
-			y = target.stop
-
-			return sqrt((a-x)**2 + (b-y)**2)
 
 		if state.power != -1:
 			state.power -= euclideanDistance(state, action)
 		else:
 			action.power -= euclideanDistance(action, state)
 
-		action.attached_edges.append(state)
-		state.attached_edges.append(action)
+		action.attached_edges[state] = euclideanDistance(state, action)
+		state.attached_edges[action] = euclideanDistance(state, action)
 		return action
 
 	''' given a node, if the node is a sensor
