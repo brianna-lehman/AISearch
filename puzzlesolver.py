@@ -22,17 +22,19 @@ def monitor(file, algo):
 	listOfSensors = []
 	listOfTargets = []
 
-	stringOfSensors = file.readline().strip().strip('[]')
+	stringOfSensors = file.readline().strip().strip('[]').replace(" ", "")
 	listOfSensorStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfSensors)
+	print listOfSensorStrings
 	# pdb.set_trace()
 	for sensorString in listOfSensorStrings:
 		sensorString = sensorString.strip('()')
 		sensor_list = sensorString.split(',')
-		sensorState = MonitorState(sensor_list[0].strip('""'), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]), {})
+		sensorState = MonitorState(sensor_list[0].strip('""'), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]), {}, {})
 		listOfSensors.append(sensorState)
 
-	stringOfTargets = file.readline().strip().strip('[]')
+	stringOfTargets = file.readline().strip().strip('[]').replace(" ", "")
 	listOfTargetStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfTargets)
+	print listOfTargetStrings
 
 	if len(listOfTargetStrings) > len(listOfSensorStrings):
 		print("No solution")
@@ -42,7 +44,7 @@ def monitor(file, algo):
 		for targetString in listOfTargetStrings:
 			targetString = targetString.strip('()')
 			target_list = targetString.split(',')
-			targetState = MonitorState(target_list[0].strip('""'), int(target_list[1]), int(sensor_list[2]), -1, {})
+			targetState = MonitorState(target_list[0].strip('""'), int(target_list[1]), int(sensor_list[2]), -1, {}, {})
 			listOfTargets.append(targetState)
 
 		for sensor in listOfSensors:
@@ -55,7 +57,7 @@ def monitor(file, algo):
 
 		allStates = listOfSensors + listOfTargets
 
-		solution = search(algo, MonitorProblem(allStates, MonitorState("root", 0, 0, 0, {}), 0))
+		solution = search(algo, MonitorProblem(allStates, allStates[0], 0))
 
 		for s in allStates:
 			print "Name %s Start %d Stop %d Power %d" %(s.name, s.start, s.stop, s.power)
@@ -171,9 +173,7 @@ def bfs(problem):
 	solution = Solution()
 	solution.time += 1
 
-	if node.state.name == "root":
-		pass
-	elif problem.goal_test(node):
+	if problem.goal_test(node):
 		return solution
 
 	frontier = Queue.Queue()
@@ -189,13 +189,10 @@ def bfs(problem):
 		# pdb.set_trace()
 		node = frontier.get()
 
-		if node.state.name == "root":
-			continue
-
 		explored.append(node.state)
-
 		node.state.visited = True
 		solution.path.append(node.state)
+
 		if node.parent is not None:
 			solution.pathCost = problem.path_cost(solution.pathCost, node)
 
@@ -389,7 +386,7 @@ class Solution:
 
 ''' MONITOR PROBLEM '''
 class MonitorState(State):
-	def __init__(self, name, start, stop, power, possible_edges, attached_edges={}, visited=False):
+	def __init__(self, name, start, stop, power, possible_edges, attached_edges, visited=False):
 		State.__init__(self, name, start, stop)
 		self.power = power
 		self.possible_edges = possible_edges
@@ -453,12 +450,7 @@ class MonitorProblem():
 	check that stateB is monitoring the target
 	and return stateB's power '''
 	def step_cost(self, stateA, stateB):
-		if stateA.power == -1:
-			for sensor in stateA.attached_edges:
-				if sensor is stateB:
-					return sensor.power
-		else:
-			return stateA.power
+		return stateA.possible_edges[stateB]
 
 ''' AGGREGATION PROBLEM '''
 class AggState(State):

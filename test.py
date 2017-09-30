@@ -43,5 +43,7 @@ def main():
 			for k, v in t.edges.items():
 				print "\t\t%s: %d" %(k.name, v)
 
+	print sensors[4].edges[targets[3]]
+
 if __name__ == "__main__":
 	main()
