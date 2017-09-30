@@ -3,26 +3,45 @@ import sys
 import pdb
 import re
 
-class Me:
-	def __init__(self, name, age):
-		self.name = name
-		self.age = age
-
-	def __cmp__(self, other):
-		return cmp(self.age, other.age)
-
-class AggState:
-	def __init__(self, name, start, stop):
+class State:
+	def __init__(self, name, start, stop, edges):
 		self.name = name
 		self.start = start
 		self.stop = stop
+		self.edges = edges
 
 def main():
-	s = "[('S_1',1,1,350),('S_2',2,3,300),('S_3',1,5,280),('S_4',1,4,250),('S_5',4,0,250),('S_6',5,0,240),('S_7',9,3,220)]"
-	print type(s)
-	s = s.strip('[]')
-	print s
-	print re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', s)
+	sensors = [State("S_"+str(x), x, x*2, {}) for x in range(10)]
+
+	for s in sensors:
+		print "%s %d %d" %(s.name, s.start, s.stop)
+	print ""
+
+	targets = [State("T_"+str(x), x+2, x**2, {}) for x in range(5)]
+
+	for t in targets:
+		print "%s %d %d" %(t.name, t.start, t.stop)
+	print ""
+
+	for s in sensors:
+		print "In %s" %s.name
+		print id(s.edges)
+		for t in targets:
+			s.edges[t] = t.stop - s.start
+			print "\tAdding %s: %d" %(t.name, s.edges[t])
+			print "\tCurrent edge array: "
+			for k, v in s.edges.items():
+				print "\t\t%s: %d" %(k.name, v)
+			print ""
+
+	for t in targets:
+		print "In %s" %t.name
+		for s in sensors:
+			t.edges[s] = t.stop - s.start
+			print "\tAdding %s: %d" %(s.name, t.edges[s])
+			print "\tCurrent edge array: "
+			for k, v in t.edges.items():
+				print "\t\t%s: %d" %(k.name, v)
 
 if __name__ == "__main__":
 	main()

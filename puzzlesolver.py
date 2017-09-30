@@ -24,17 +24,17 @@ def monitor(file, algo):
 
 	stringOfSensors = file.readline().strip().strip('[]')
 	listOfSensorStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfSensors)
-
+	# pdb.set_trace()
 	for sensorString in listOfSensorStrings:
 		sensorString = sensorString.strip('()')
 		sensor_list = sensorString.split(',')
-		sensorState = MonitorState(sensor_list[0].strip('""'), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]))
+		sensorState = MonitorState(sensor_list[0].strip('""'), int(sensor_list[1]), int(sensor_list[2]), int(sensor_list[3]), {})
 		listOfSensors.append(sensorState)
 
 	stringOfTargets = file.readline().strip().strip('[]')
 	listOfTargetStrings = re.split(r',(?!(?:[^(]*\([^)]*\))*[^()]*\))', stringOfTargets)
 
-	if len(listOfTargetStrings) > len(listOfSensors):
+	if len(listOfTargetStrings) > len(listOfSensorStrings):
 		print("No solution")
 		write(Solution())
 		sys.exit()
@@ -42,7 +42,7 @@ def monitor(file, algo):
 		for targetString in listOfTargetStrings:
 			targetString = targetString.strip('()')
 			target_list = targetString.split(',')
-			targetState = MonitorState(target_list[0].strip('""'), int(target_list[1]), int(sensor_list[2]), -1)
+			targetState = MonitorState(target_list[0].strip('""'), int(target_list[1]), int(sensor_list[2]), -1, {})
 			listOfTargets.append(targetState)
 
 		for sensor in listOfSensors:
@@ -55,7 +55,17 @@ def monitor(file, algo):
 
 		allStates = listOfSensors + listOfTargets
 
-		solution = search(algo, MonitorProblem(allStates, MonitorState("root"), 0))
+		solution = search(algo, MonitorProblem(allStates, MonitorState("root", 0, 0, 0, {}), 0))
+
+		for s in allStates:
+			print "Name %s Start %d Stop %d Power %d" %(s.name, s.start, s.stop, s.power)
+			print "Possible edges: "
+			for k, v in s.possible_edges.items():
+				print "\t%s: %d" %(k.name, v)
+			print "Attached edges: "
+			for k, v in s.attached_edges.items():
+				print "\t%s: %s" %(k.name, v)
+			print ""
 
 		write("monitor_"+algo+"_output", solution)
 
@@ -71,7 +81,7 @@ def aggregation(file, algo):
 		stateString = stateString.strip(" ").strip('()')
 		state = stateString.split(',')
 		print state
-		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]))
+		aggState = AggState(state[0].strip('""'), int(state[1]), int(state[2]), {})
 		listOfStates.append(aggState)
 
 	for line in file:
@@ -94,8 +104,8 @@ def aggregation(file, algo):
 			else:
 				pass
 
-		stateA.addAdjacentState(stateB, weight)
-		stateB.addAdjacentState(stateA, weight)
+		stateA.edges[stateB] = weight
+		stateB.edges[stateA] = weight
 
 	problem = AggProblem(listOfStates, listOfStates[0], 0)
 	solution = search(algo, problem)
@@ -379,7 +389,7 @@ class Solution:
 
 ''' MONITOR PROBLEM '''
 class MonitorState(State):
-	def __init__(self, name="root", start=0, stop=0, power=0, possible_edges={}, attached_edges={}, visited=False):
+	def __init__(self, name, start, stop, power, possible_edges, attached_edges={}, visited=False):
 		State.__init__(self, name, start, stop)
 		self.power = power
 		self.possible_edges = possible_edges
@@ -452,7 +462,7 @@ class MonitorProblem():
 
 ''' AGGREGATION PROBLEM '''
 class AggState(State):
-	def __init__(self, name, start, stop, edges={}, visited=False):
+	def __init__(self, name, start, stop, edges, visited=False):
 		State.__init__(self, name, start, stop)
 		self.edges = edges
 		self.visited = visited
