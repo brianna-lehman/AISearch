@@ -283,6 +283,7 @@ def depth_limited_search(problem, limit):
 def recursive_dls(node, problem, solution, limit):
 	# print "inside recursive dls %d" %limit
 	node.state.visited = True
+	solution.path.append(node.state);
 	if problem.goal_test(node):
 		# print "At goal state"
 		return solution
@@ -500,7 +501,7 @@ class AggProblem:
 	def path_cost(self, current_path_cost, node):
 		return current_path_cost + self.step_cost(node.parent.state, node.state)
 
-	def remove_path_cost(self, current_path_cost, nodeA):
+	def remove_path_cost(self, current_path_cost, node):
 		return current_path_cost - self.step_cost(node.parent.state, node.state)
 
 	# find the weight of the edge between these two states
